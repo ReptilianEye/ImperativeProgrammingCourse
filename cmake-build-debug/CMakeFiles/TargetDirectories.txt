@@ -1,0 +1,7 @@
+C:/Users/piotr/Programowanie/Nauka C/cmake-build-debug/CMakeFiles/Nauka_C.dir
+C:/Users/piotr/Programowanie/Nauka C/cmake-build-debug/CMakeFiles/fibb.dir
+C:/Users/piotr/Programowanie/Nauka C/cmake-build-debug/CMakeFiles/vectors.dir
+C:/Users/piotr/Programowanie/Nauka C/cmake-build-debug/CMakeFiles/wstepDoC.dir
+C:/Users/piotr/Programowanie/Nauka C/cmake-build-debug/CMakeFiles/permutacje.dir
+C:/Users/piotr/Programowanie/Nauka C/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/piotr/Programowanie/Nauka C/cmake-build-debug/CMakeFiles/rebuild_cache.dir
