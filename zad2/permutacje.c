@@ -39,11 +39,11 @@ int rand_from_interval(int a, int b) {
 // jest zapisywana w tablicy tab.
 // 0 < n <= 100, jezeli nie to elementy tablicy tab maja wartosci nieokreslone.
 void rand_permutation(int n, int tab[]) {
-    int i, rand_poz, temp;
+    int i, rand_poz;
     for (i = 0; i < n; i++)
         tab[i] = i;
     for (i = 0; i < n - 1; i++) {
-        rand_poz = rand_from_interval(0, n - 1);
+        rand_poz = rand_from_interval(i, n - 1);
         swap(&tab[i], &tab[rand_poz]);
     }
 }
@@ -52,7 +52,7 @@ void rand_permutation(int n, int tab[]) {
 // Zwraca numer iteracji petli zewnetrznej (liczony od 1), po ktorej tablica byla uporzadkowana,
 // np. dla { 0 1 2 3 7 4 5 6 } -> 1,
 //     dla { 1 2 3 7 4 5 6 0 } -> 7,
-//     dla { 0 1 2 3 4 5 6 7 } -> 0.
+//     dla { 0 1 2 3 4 5 6 7 S} -> 0.
 int bubble_sort(int n, int tab[]) {
     int iters, i, if_done;
     iters = 0;

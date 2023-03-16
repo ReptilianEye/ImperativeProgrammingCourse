@@ -205,6 +205,39 @@ build permutacje.exe: C_EXECUTABLE_LINKER__permutacje_Debug CMakeFiles/permutacj
   TARGET_IMPLIB = libpermutacje.dll.a
   TARGET_PDB = permutacje.exe.dbg
 
+# =============================================================================
+# Object build statements for EXECUTABLE target struktury
+
+
+#############################################
+# Order-only phony target for struktury
+
+build cmake_object_order_depends_target_struktury: phony || CMakeFiles/struktury.dir
+
+build CMakeFiles/struktury.dir/zad2/struktury.c.obj: C_COMPILER__struktury_Debug C$:/Users/piotr/Programowanie/Nauka$ C/zad2/struktury.c || cmake_object_order_depends_target_struktury
+  DEP_FILE = CMakeFiles\struktury.dir\zad2\struktury.c.obj.d
+  FLAGS = -g -fdiagnostics-color=always -std=gnu11
+  OBJECT_DIR = CMakeFiles\struktury.dir
+  OBJECT_FILE_DIR = CMakeFiles\struktury.dir\zad2
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target struktury
+
+
+#############################################
+# Link the executable struktury.exe
+
+build struktury.exe: C_EXECUTABLE_LINKER__struktury_Debug CMakeFiles/struktury.dir/zad2/struktury.c.obj
+  FLAGS = -g
+  LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  OBJECT_DIR = CMakeFiles\struktury.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_FILE = struktury.exe
+  TARGET_IMPLIB = libstruktury.dll.a
+  TARGET_PDB = struktury.exe.dbg
+
 
 #############################################
 # Utility command for edit_cache
@@ -237,6 +270,8 @@ build fibb: phony fibb.exe
 
 build permutacje: phony permutacje.exe
 
+build struktury: phony struktury.exe
+
 build vectors: phony vectors.exe
 
 build wstepDoC: phony wstepDoC.exe
@@ -249,7 +284,7 @@ build wstepDoC: phony wstepDoC.exe
 #############################################
 # Folder: C:/Users/piotr/Programowanie/Nauka C/cmake-build-debug
 
-build all: phony Nauka_C.exe fibb.exe vectors.exe wstepDoC.exe permutacje.exe
+build all: phony Nauka_C.exe fibb.exe vectors.exe wstepDoC.exe permutacje.exe struktury.exe
 
 # =============================================================================
 # Built-in targets
