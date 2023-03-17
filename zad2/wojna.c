@@ -50,6 +50,7 @@ void assign_cards(rbuffer *winner, rbuffer *loser); //assign cards from "table" 
 // In the game each player will use two structures "hand" and "table" in front of a player.
 // If player play a card it pops from they hand and pushes to "table" as long as the duel is not decided.
 // Then cards which they won go back to his "hand"
+int conflicts=0;
 int main(void) {
     int seed, easy, max_confilcts, game_result;
     if (TEST)
@@ -75,7 +76,9 @@ int main(void) {
             printf("%d\n", hand_state(&player2));
             break;
         case (2):
-            break;   // done earlier
+            printf("%d\n", 2);
+            printf("%d\n", conflicts);
+            break;
         case (3):
             printf("%d\n", game_result);
             hand_print(&player2);
@@ -89,7 +92,7 @@ int main(void) {
 
 
 int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
-    int p1_card, p2_card, res, conflicts = 0, currently_draw = 0;
+    int p1_card, p2_card, res, currently_draw = 0;
 
     while (conflicts < max_conflicts) {
         if (hand_state(p1) == 0 || hand_state(p2) == 0) //if players have cards in hand
@@ -132,10 +135,8 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
         return 0;
     }
     if (hand_state(p2) == 0) { //handling winning of 1st player
-        if (!easy)
+        if (!easy)  // for some reason with it works
             conflicts++;
-        printf("%d\n", 2);
-        printf("%d\n", conflicts);
         return 2;
     }
     if (hand_state(p1) == 0)

@@ -74,7 +74,6 @@ int bubble_sort(int n, int tab[]) {
     return iters;
 }
 
-
 int main(void) {
     int nr_testu, seed;
     int a, b, n, i;
