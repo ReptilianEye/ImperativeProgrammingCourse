@@ -53,7 +53,7 @@ void assign_cards(rbuffer *winner, rbuffer *loser); //assign cards from "table" 
 int main(void) {
     int seed, easy, max_confilcts, game_result;
     if (TEST)
-        printf("Podaj seed, wersje (0 trudna, 1 uproszczona), i ilosc mozliwych konfiltow przed końcem gry (oddzielone spacjami).");
+        printf("Podaj seed, wersje (0 trudna, 1 uproszczona), i ilosc mozliwych konfiltow przed koncem gry (oddzielone spacjami): ");
     scanf("%d %d %d", &seed, &easy, &max_confilcts);
     srand(seed);
 
@@ -63,28 +63,28 @@ int main(void) {
     split_cards(&player1, &player2);
 
     game_result = simul_game(&player1, &player2, easy, max_confilcts); //simulate game
-    //switch case doesn't work for me (I do not know why)
-    if (game_result == 0) {
-        printf("%d\n", game_result);
-        printf("%d\n", hand_state(&player1));
-        printf("%d\n", hand_state(&player2));
-        return 0;
+    switch (game_result) {
+        case (0):
+            printf("%d\n", game_result);
+            printf("%d\n", hand_state(&player1));
+            printf("%d\n", hand_state(&player2));
+            break;
+        case (1):
+            printf("%d\n", game_result);
+            printf("%d\n", hand_state(&player1));
+            printf("%d\n", hand_state(&player2));
+            break;
+        case (2):
+            break;   // done earlier
+        case (3):
+            printf("%d\n", game_result);
+            hand_print(&player2);
+            break;
+        default:
+            printf("ERR: Wrong result"); //should never happen
+            return -111;
     }
-    if (game_result == 1) {
-        printf("%d\n", game_result);
-        printf("%d\n", hand_state(&player1));
-        printf("%d\n", hand_state(&player2));
-        return 0;
-    }
-    if (game_result == 2)
-        return 0;   // done earlier
-    if (game_result == 3) {
-        printf("%d\n", game_result);
-        hand_print(&player2);
-        return 0;
-    }
-    printf("ERR: Wrong result"); //should never happen
-    return -111;
+    return 0;
 }
 
 
@@ -121,7 +121,8 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
         conflicts++;
     }
     if (currently_draw) {
-        assign_cards(p1, p1); //if at the end of cards in hand of one of the players their table cards go back to their hands
+        assign_cards(p1,
+                     p1); //if at the end of cards in hand of one of the players their table cards go back to their hands
         assign_cards(p2, p2);
         return 1;
     }
