@@ -15,13 +15,13 @@ double stack_pop(void);
 
 int stack_state(void);
 
-double queue_push(int how_many);
+double desk_push(int how_many);
 
-int queue_pop(int how_many);
+int desk_pop(int how_many);
 
-int queue_state(void);
+int desk_state(void);
 
-void queue_print(void);
+void desk_print(void);
 
 double cbuff_push(int cli_nr);
 
@@ -62,15 +62,15 @@ int main(void) {
             do {
                 scanf("%d", &n);
                 if (n > 0) {
-                    f_ans = queue_push(n);
+                    f_ans = desk_push(n);
                     if (f_ans == INFINITY) printf("%f ", INFINITY);
                 } else {
                     if (n < 0) {
-                        ans = queue_pop(-n);
+                        ans = desk_pop(-n);
                         if (ans < 0) printf("-1 ");
                     } else {
-                        printf("\n%d\n", queue_state());
-                        queue_print();
+                        printf("\n%d\n", desk_state());
+                        desk_print();
                     }
                 }
             } while (n != 0);
@@ -88,7 +88,7 @@ int main(void) {
                 } else {
                     if (kod_operacji < 0) {
                         printf("%d ", cbuff_pop());
-//                    ans = cbuff_pop();
+//                    ans = hand_pop();
 //                    if(ans < 0) printf("%f ",NAN);
 //                    else        printf("%d ",ans);
                     } else {
@@ -141,7 +141,7 @@ int stack_state(void) {
 int queue[QUEUE_SIZE];
 int in = 0, curr_nr = 0;  // 1. klient dostanie nr = 1
 
-double queue_push(int how_many) {
+double desk_push(int how_many) {
     while (in < QUEUE_SIZE && how_many > 0) {
         queue[in] = curr_nr+1;
         curr_nr++;
@@ -165,7 +165,7 @@ void swap(int *a, int *b) {
 
 }
 
-int queue_pop(int how_many) {
+int desk_pop(int how_many) {
     int i = 0, j = 0;
     if (how_many > in) {
         for (i = 0; i < QUEUE_SIZE; i++) {
@@ -189,11 +189,11 @@ int queue_pop(int how_many) {
     return in;
 }
 
-int queue_state(void) {
+int desk_state(void) {
     return in;
 }
 
-void queue_print(void) {
+void desk_print(void) {
     for (int i = 0; i < in; i++) {
         printf("%d ", queue[i]);
     }

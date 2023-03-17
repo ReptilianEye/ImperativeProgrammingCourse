@@ -14,7 +14,7 @@ int card_colors = 4;
 typedef struct Player {
     int qsize, out, len, empty, in;
     int hand[max_cards];
-    int table[max_cards]
+    int table[max_cards];
 } rbuffer;
 
 struct Player init(int max_n);
@@ -89,7 +89,7 @@ int main(void) {
         return 0;
     }
     printf("Blaaad zly wynik gry");
-    return -1;
+    return 0;
 }
 
 
@@ -137,6 +137,8 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
         return 0;
     }
     if (hand_state(p2) == 0) {
+        if (!easy)
+            conflicts++;
         printf("%d\n", 2);
         printf("%d\n", conflicts);
         return 2;

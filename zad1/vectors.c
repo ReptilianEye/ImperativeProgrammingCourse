@@ -58,7 +58,7 @@ void read_vector(double v[], int n) {
     }
 }
 
-// print double vector of size n (with 2 figures after the decimal point)
+// hand_print double vector of size n (with 2 figures after the decimal point)
 void print_vector(const double v[], int n) {
     for (int i = 0; i < n; ++i) {
         printf("%.2f ", v[i]);
