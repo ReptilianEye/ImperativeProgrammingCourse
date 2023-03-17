@@ -6,18 +6,17 @@
 #include <limits.h>
 #include <math.h>
 
-int card_types = 13;
-int card_colors = 4;
 #define max_cards 52
 #define TEST 1
+int card_colors = 4;
 
-typedef struct Player {
+typedef struct Player { //object used to represent Player; their hand and table (as objected as it possible)
     int qsize, out, len, empty, in;
     int hand[max_cards];
     int table[max_cards];
 } rbuffer;
 
-struct Player init(int max_n);
+struct Player init(int max_n); // function returns instance of player
 
 double hand_push(rbuffer *player, int cli_nr);
 
@@ -31,44 +30,40 @@ double table_push(rbuffer *player, int curr);
 
 int table_pop(rbuffer *player);
 
-int table_state(rbuffer *player);
-
-void table_print(rbuffer *player);
-
 void swap(int *a, int *b);
 
-int rand_from_interval(int a, int b);
+int rand_from_interval(int a, int b); // used to generate permutations - shuffle cards
 
-void rand_permutation(int n, int tab[]);
+void rand_permutation(int n, int tab[]); // shuffles cards
 
-void split_cards(rbuffer *p1, rbuffer *p2);
+void
+split_cards(rbuffer *p1, rbuffer *p2); //shuffles cards and split them beetween players, inserting them to their hands
 
 int define_winner(int p1, int p2); //return 0 if draw, 1 if first win, 2 if second
 
 int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts);
 
-int put_card_on_table(rbuffer *p);
+int put_card_on_table(rbuffer *p); //places card on table and return its value
 
-void assign_cards(rbuffer *winner, rbuffer *loser);
+void assign_cards(rbuffer *winner, rbuffer *loser); //assign cards from "table" of both players to the player how won
 
-
+// In the game each player will use two structures "hand" and "table" in front of a player.
+// If player play a card it pops from they hand and pushes to "table" as long as the duel is not decided.
+// Then cards which they won go back to his "hand"
 int main(void) {
     int seed, easy, max_confilcts, game_result;
-//    if (TEST)
-//        printf("Podaj seed, wersja (0 trudna) i ilosc mozliwych konfiltow");
-//    scanf("%d %d %d", &seed, &easy, &max_confilcts);
-    seed = 10444;
-    easy = 0;
-    max_confilcts = 100;
+    if (TEST)
+        printf("Podaj seed, wersje (0 trudna, 1 uproszczona), i ilosc mozliwych konfiltow przed końcem gry (oddzielone spacjami).");
+    scanf("%d %d %d", &seed, &easy, &max_confilcts);
     srand(seed);
 
-    //    const int max_cards = card_colors * card_types;
-    setbuf(stdout, 0);
-    rbuffer player1 = init(max_cards);
+//    setbuf(stdout, 0); //used to see console output while debugging
+    rbuffer player1 = init(max_cards); //initialize players
     rbuffer player2 = init(max_cards);
     split_cards(&player1, &player2);
 
-    game_result = simul_game(&player1, &player2, easy, max_confilcts);
+    game_result = simul_game(&player1, &player2, easy, max_confilcts); //simulate game
+    //switch case doesn't work for me (I do not know why)
     if (game_result == 0) {
         printf("%d\n", game_result);
         printf("%d\n", hand_state(&player1));
@@ -82,25 +77,24 @@ int main(void) {
         return 0;
     }
     if (game_result == 2)
-        return 0;
+        return 0;   // done earlier
     if (game_result == 3) {
         printf("%d\n", game_result);
         hand_print(&player2);
         return 0;
     }
-    printf("Blaaad zly wynik gry");
-    return 0;
+    printf("ERR: Wrong result"); //should never happen
+    return -111;
 }
 
 
 int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
-    int p1_card, p2_card, res, conflicts, currently_draw;
-    currently_draw = 0;
-    conflicts = 0;
+    int p1_card, p2_card, res, conflicts = 0, currently_draw = 0;
+
     while (conflicts < max_conflicts) {
-        if (hand_state(p1) == 0 || hand_state(p2) == 0)
+        if (hand_state(p1) == 0 || hand_state(p2) == 0) //if players have cards in hand
             break;
-        p1_card = put_card_on_table(p1);
+        p1_card = put_card_on_table(p1); //play cards
         p2_card = put_card_on_table(p2);
         res = define_winner(p1_card, p2_card);
         if (res == 0) {
@@ -108,35 +102,35 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
                 if (!easy) {
                     if (hand_state(p1) == 0 || hand_state(p2) == 0)
                         break;
-                    p1_card = put_card_on_table(p1); //hidded card on table if draw
-                    p2_card = put_card_on_table(p2);
-                    conflicts--; // to balance increment later
-                    currently_draw = 1;
+                    put_card_on_table(p1); //hidded card on table if draw (play cards but with no consequences
+                    put_card_on_table(p2);
+                    conflicts--; // to balance increment later (in normal version draw is not counted as conflict)
+                    currently_draw = 1; // to if game ended while deciding draw
                 } else {
-                    hand_push(p1, table_pop(p1));
+                    hand_push(p1, table_pop(p1)); // in easy version in case of a draw cards go back to hand of a player
                     hand_push(p2, table_pop(p2));
                 }
             }
         } else {
             if (res == 1)
-                assign_cards(p1, p2);
+                assign_cards(p1, p2); //1st player won
             else
-                assign_cards(p2, p1);
-            currently_draw = 0;
+                assign_cards(p2, p1); //2nd player won
+            currently_draw = 0; //draw decided
         }
         conflicts++;
     }
     if (currently_draw) {
-        assign_cards(p1, p1);
+        assign_cards(p1, p1); //if at the end of cards in hand of one of the players their table cards go back to their hands
         assign_cards(p2, p2);
         return 1;
     }
-    if (conflicts == max_conflicts) {
+    if (conflicts == max_conflicts) { // if limit of conflicts is reached cards on table returns to hands of the players
         assign_cards(p1, p1);
         assign_cards(p2, p2);
         return 0;
     }
-    if (hand_state(p2) == 0) {
+    if (hand_state(p2) == 0) { //handling winning of 1st player
         if (!easy)
             conflicts++;
         printf("%d\n", 2);
@@ -151,8 +145,7 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
 
 struct Player init(int n) {
     rbuffer player;
-    int empty = -1; // fill with the player if empty
-
+    int empty = -1; // fill with if empty
 
     player.qsize = n;
     player.len = 0;
@@ -253,7 +246,6 @@ void hand_print(rbuffer *player) {
     }
 }
 
-
 double table_push(rbuffer *player, int x) {
     if (player->in < player->qsize) {
         player->table[player->in] = x;
@@ -263,11 +255,9 @@ double table_push(rbuffer *player, int x) {
     return 0;
 }
 
-
 int table_pop(rbuffer *player) {
     int out = player->table[0];
     if (out == -1) {
-//        printf("ERRRRRRRRRR za malo elementow w kolejce");
         return -1;
     }
     int i;
@@ -276,16 +266,6 @@ int table_pop(rbuffer *player) {
     player->table[i] = player->empty;
     player->in--;
     return out;
-}
-
-int table_state(rbuffer *player) {
-    return player->in;
-}
-
-void table_print(rbuffer *player) {
-    for (int i = 0; i < player->in; i++) {
-        printf("%d ", player->table[i]);
-    }
 }
 
 void swap(int *a, int *b) {
@@ -302,10 +282,6 @@ int rand_from_interval(int a, int b) {
     return a + rand() % (b - a + 1);
 }
 
-// Losowa permutacja elementow zbioru liczb {0, 1, 2,..., n-1} (z rozkladem rownomiernym)
-// wg algorytmu przedstawionego w opisie zadania
-// jest zapisywana w tablicy tab.
-// 0 < n <= 100, jezeli nie to elementy tablicy tab maja wartosci nieokreslone.
 void rand_permutation(int n, int tab[]) {
     int i, rand_poz;
     for (i = 0; i < n; i++)
