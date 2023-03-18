@@ -75,7 +75,6 @@ int main(void) {
     return 0;
 }
 
-
 int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
     int p1_card, p2_card, res, currently_draw = 0;
 
@@ -86,7 +85,6 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
         p2_card = put_card_on_table(p2);
         res = define_winner(p1_card, p2_card);
         if (res == 0) {
-            {
                 if (!easy) {
                     if (hand_state(p1) == 0 || hand_state(p2) == 0)
                         break;
@@ -98,7 +96,6 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
                     hand_push(p1, table_pop(p1)); // in easy version in case of a draw cards go back to hand of a player
                     hand_push(p2, table_pop(p2));
                 }
-            }
         } else {
             if (res == 1)
                 assign_cards(p1, p2); //1st player won
@@ -109,8 +106,7 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
         conflicts++;
     }
     if (currently_draw) {
-        assign_cards(p1,
-                     p1); //if at the end of cards in hand of one of the players their table cards go back to their hands
+        assign_cards(p1, p1); //if at the end of cards in hand of one of the players their table cards go back to their hands
         assign_cards(p2, p2);
         return 1;
     }
@@ -168,7 +164,6 @@ int put_card_on_table(rbuffer *p) {
     table_push(p, card);
     return card;
 }
-
 
 void split_cards(rbuffer *p1, rbuffer *p2) {
     int n = p1->qsize;
