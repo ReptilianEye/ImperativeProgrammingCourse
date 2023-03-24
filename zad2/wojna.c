@@ -50,7 +50,8 @@ void assign_cards(rbuffer *winner, rbuffer *loser); //assign cards from "table" 
 // In the game each player will use two structures "hand" and "table" in front of a player.
 // If player play a card it pops from they hand and pushes to "table" as long as the duel is not decided.
 // Then cards which they won go back to his "hand"
-int conflicts=0;
+int conflicts = 0;
+
 int main(void) {
     int seed, easy, max_confilcts, game_result;
     if (TEST)
@@ -58,10 +59,14 @@ int main(void) {
     scanf("%d %d %d", &seed, &easy, &max_confilcts);
     srand(seed);
 
-//    setbuf(stdout, 0); //used to see console output while debugging
+    setbuf(stdout, 0); //used to see console output while debugging
     rbuffer player1 = init(max_cards); //initialize players
     rbuffer player2 = init(max_cards);
     split_cards(&player1, &player2);
+    printf("\n");
+    hand_print(&player1);
+    hand_print(&player2);
+
 
     game_result = simul_game(&player1, &player2, easy, max_confilcts); //simulate game
     switch (game_result) {
