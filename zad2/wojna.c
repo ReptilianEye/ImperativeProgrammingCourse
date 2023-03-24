@@ -17,34 +17,19 @@ typedef struct Player { //object used to represent Player; their hand and table 
 } rbuffer;
 
 struct Player init(int max_n); // function returns instance of player
-
 double hand_push(rbuffer *player, int cli_nr);
-
 int hand_pop(rbuffer *player);
-
 int hand_state(rbuffer *player);
-
 void hand_print(rbuffer *player);
-
 double table_push(rbuffer *player, int curr);
-
 int table_pop(rbuffer *player);
-
 void swap(int *a, int *b);
-
 int rand_from_interval(int a, int b); // used to generate permutations - shuffle cards
-
 void rand_permutation(int n, int tab[]); // shuffles cards
-
-void
-split_cards(rbuffer *p1, rbuffer *p2); //shuffles cards and split them beetween players, inserting them to their hands
-
+void split_cards(rbuffer *p1, rbuffer *p2); //shuffles cards and split them beetween players, inserting them to their hands
 int define_winner(int p1, int p2); //return 0 if draw, 1 if first win, 2 if second
-
 int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts);
-
 int put_card_on_table(rbuffer *p); //places card on table and return its value
-
 void assign_cards(rbuffer *winner, rbuffer *loser); //assign cards from "table" of both players to the player how won
 
 // In the game each player will use two structures "hand" and "table" in front of a player.
@@ -95,7 +80,6 @@ int main(void) {
     return 0;
 }
 
-
 int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
     int p1_card, p2_card, res, currently_draw = 0;
 
@@ -106,7 +90,6 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
         p2_card = put_card_on_table(p2);
         res = define_winner(p1_card, p2_card);
         if (res == 0) {
-            {
                 if (!easy) {
                     if (hand_state(p1) == 0 || hand_state(p2) == 0)
                         break;
@@ -118,7 +101,6 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
                     hand_push(p1, table_pop(p1)); // in easy version in case of a draw cards go back to hand of a player
                     hand_push(p2, table_pop(p2));
                 }
-            }
         } else {
             if (res == 1)
                 assign_cards(p1, p2); //1st player won
@@ -129,8 +111,7 @@ int simul_game(rbuffer *p1, rbuffer *p2, int easy, int max_conflicts) {
         conflicts++;
     }
     if (currently_draw) {
-        assign_cards(p1,
-                     p1); //if at the end of cards in hand of one of the players their table cards go back to their hands
+        assign_cards(p1, p1); //if at the end of cards in hand of one of the players their table cards go back to their hands
         assign_cards(p2, p2);
         return 1;
     }
@@ -188,7 +169,6 @@ int put_card_on_table(rbuffer *p) {
     table_push(p, card);
     return card;
 }
-
 
 void split_cards(rbuffer *p1, rbuffer *p2) {
     int n = p1->qsize;
