@@ -84,7 +84,7 @@ void char_count(int char_no, int *n_char, int *cnt, FILE *stream)
         zlicz[i] = 0;
     char line[128];
     int i = 0;
-    while (fgets(line, sizeof(line), stdin) != NULL)
+    while (fgets(line, sizeof(line), stream) != NULL)
     {
         i = 0;
         while (line[i] != '\n')
@@ -130,7 +130,7 @@ void digram_count(int digram_no, int digram[], FILE *stream)
 
     char line[128];
     int i = 0;
-    while (fgets(line, sizeof(line), stdin) != NULL)
+    while (fgets(line, sizeof(line), stream) != NULL)
     {
         i = 0;
         while (line[i + 1] != '\n')
@@ -178,7 +178,7 @@ void find_comments(int *line_comment_counter, int *block_comment_counter, FILE *
     char line[128];
     int i = 0;
     int czy_blokowy = 0;
-    while (fgets(line, sizeof(line), stdin) != NULL)
+    while (fgets(line, sizeof(line), stream) != NULL)
     {
         i = 0;
         while (line[i + 1] != '\n')
