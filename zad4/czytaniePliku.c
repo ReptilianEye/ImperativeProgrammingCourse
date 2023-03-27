@@ -51,34 +51,12 @@ int cmp_di(const void *a, const void *b)
 // (nc) in the text read from stream
 void wc(int *nl, int *nw, int *nc, FILE *stream)
 {
-    //    *nl = 0;
-    //    *nw = 0;
-    //    *nc = 0;
-    //    int in_word =0;
-    //    while (1) {
-    //        int c = fgetc(stream);
-    //        if (c == EOF) {
-    //            break;
-    //        }
-    //        *nc=*nc+1;
-    //
-    //        if (c == '\n') {
-    //            *nl=*nl+1;
-    //        }
-    //
-    //        if (isspace(c)) {
-    //            in_word = 0;
-    //        } else if (!in_word) {
-    //            in_word = 1;
-    //            *nw=*nw+1;
-    //        }
-    //    }
 
     char line[128];
     *nl = 0;
     *nw = 0;
     *nc = 0;
-    while (fgets(line, sizeof(line), stdin) != NULL)
+    while (fgets(line, sizeof(line), stream) != NULL)
     {
         for (int i = 0; line[i] != '\n'; i++)
         {
@@ -92,7 +70,7 @@ void wc(int *nl, int *nw, int *nc, FILE *stream)
         //        *nw = *nw + 1;
         *nl = *nl + 1;
     }
-    *nw = *nw + *nl-2;
+    *nw = *nw + *nl - 2;
 }
 
 // count how many times each character from [FIRST_CHAR, LAST_CHAR) occurs
@@ -108,6 +86,7 @@ void char_count(int char_no, int *n_char, int *cnt, FILE *stream)
     int i = 0;
     while (fgets(line, sizeof(line), stdin) != NULL)
     {
+        i = 0;
         while (line[i] != '\n')
         {
             zlicz[line[i] - FIRST_CHAR]++;
@@ -128,7 +107,7 @@ void char_count(int char_no, int *n_char, int *cnt, FILE *stream)
         if (i == char_no)
         {
             *n_char = (char)(poz_max + FIRST_CHAR);
-            *cnt = zlicz[poz_max] - 1;
+            *cnt = zlicz[poz_max];
             return;
         }
         i++;
@@ -193,9 +172,8 @@ void digram_count(int digram_no, int digram[], FILE *stream)
 // line_comment_counter and block_comment_counter accordingly
 void find_comments(int *line_comment_counter, int *block_comment_counter, FILE *stream)
 {
-    *line_comment_counter=0;
-    *block_comment_counter=0;
-
+    *line_comment_counter = 0;
+    *block_comment_counter = 0;
 
     char line[128];
     int i = 0;
@@ -226,6 +204,7 @@ void find_comments(int *line_comment_counter, int *block_comment_counter, FILE *
         }
     }
 }
+
 
 #define MAX_LINE 128
 
