@@ -8,10 +8,11 @@ int main(void) {
     int szesnastowa = 0xA; // jesli damy 0x przed liczbą to ta liczba jest w systemie szesnastkowym
     char a[] = "abc\b\bCDE";
 
-    int b = '1';
-    double c;
-    c = 1/2;
+    float c = 2.113;
     printf("%f\n", c);
+    c = 1.0 >> c;
+    printf("%f\n", c);
+
 
     int suma = 0;
     loop:
