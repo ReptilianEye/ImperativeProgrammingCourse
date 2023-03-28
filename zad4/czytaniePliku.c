@@ -209,6 +209,7 @@ void find_comments(int *line_comment_counter, int *block_comment_counter, FILE *
             if (line[i] == '*' && line[i + 1] == '/' && czy_blokowy)
             {
                 czy_blokowy = 0;
+                i++;
             }
             else if (!czy_blokowy)
             {
@@ -216,6 +217,7 @@ void find_comments(int *line_comment_counter, int *block_comment_counter, FILE *
                 {
                     czy_blokowy = 1;
                     *block_comment_counter = *block_comment_counter + 1;
+                    i++;
                 }
                 else if (line[i] == '/' && line[i + 1] == '/')
                 {
