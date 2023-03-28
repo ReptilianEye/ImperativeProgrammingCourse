@@ -56,10 +56,14 @@ void wc(int *nl, int *nw, int *nc, FILE *stream)
     *nl = 0;
     *nw = 0;
     *nc = 0;
+    int i = 0;
+    int czyChar = 0;
     while (fgets(line, sizeof(line), stream) != NULL)
     {
-        for (int i = 0; line[i] != '\n'; i++)
+        for (i = 0, czyChar = 0; line[i] != '\n'; i++)
         {
+            if (!isspace(line[i]))
+                czyChar = 1;
             if (line[i] == ' ')
             {
                 int temp = 0;
@@ -76,13 +80,16 @@ void wc(int *nl, int *nw, int *nc, FILE *stream)
                 }
             }
             *nc = *nc + 1;
-            if (line[i] == ' ' && line[i + 1] != ' ')
+            if (line[i] != ' ' && line[i + 1] == ' ')
             {
                 *nw = *nw + 1;
             }
         }
+        if (czyChar && i != 0)
+        {
+            *nw = *nw + 1;
+        }
         *nc = *nc + 1; // count \n
-        *nw = *nw + 1;
         *nl = *nl + 1;
         // printf("%d %d %d \n", *nl, *nw, *nc);
     }
@@ -138,8 +145,8 @@ void char_count(int char_no, int *n_char, int *cnt, FILE *stream)
 // in the sorted list. Set digram[2] to its cardinality.
 void digram_count(int digram_no, int digram[], FILE *stream)
 {
-    int zlicz[MAX_CHARS][MAX_CHARS];
-    int n = MAX_CHARS;
+    int n = MAX_CHARS + 1;
+    int zlicz[n][n];
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             zlicz[i][j] = 0;
