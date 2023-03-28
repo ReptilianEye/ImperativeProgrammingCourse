@@ -60,17 +60,33 @@ void wc(int *nl, int *nw, int *nc, FILE *stream)
     {
         for (int i = 0; line[i] != '\n'; i++)
         {
-            //            if (line[i] != ' ')
+            if (line[i] == ' ')
+            {
+                int temp = 0;
+                while (temp < 3 && line[i + temp] == ' ')
+                {
+
+                    temp++;
+                }
+                if (temp == 3)
+                {
+                    *nc = *nc + 1;
+                    i = i + temp;
+                    continue;
+                }
+            }
             *nc = *nc + 1;
             if (line[i] == ' ' && line[i + 1] != ' ')
             {
                 *nw = *nw + 1;
             }
         }
-        //        *nw = *nw + 1;
+        *nc = *nc + 1; // count \n
+        *nw = *nw + 1;
         *nl = *nl + 1;
+        // printf("%d %d %d \n", *nl, *nw, *nc);
     }
-    *nw = *nw + *nl - 2;
+    // *nw = *nw + *nl - 2;
 }
 
 // count how many times each character from [FIRST_CHAR, LAST_CHAR) occurs
@@ -204,7 +220,6 @@ void find_comments(int *line_comment_counter, int *block_comment_counter, FILE *
         }
     }
 }
-
 
 #define MAX_LINE 128
 
