@@ -17,7 +17,7 @@
 #define IN_LINE_COMMENT 1
 #define IN_BLOCK_COMMENT 2
 
-#define TEST 0 // 1 dla testowania, 0 dla automatycznej oceny
+#define TEST 1 // 1 dla testowania, 0 dla automatycznej oceny
 
 int count[MAX_DIGRAMS] = {0};
 
@@ -87,15 +87,15 @@ void char_count(int char_no, int *n_char, int *cnt, FILE *stream)
     for (int i = 0; i < MAX_CHARS; i++)
     {
         count[i] = 0;
-        poz_chars[i] = i + FIRST_CHAR;
+        poz_chars[i] = i;
     }
     char c;
     while ((c = getc(stream)) != EOF)
         if (!isblank(c) && c != '\n')
-            count[c] += 1;
+            count[c - FIRST_CHAR] += 1;
     qsort(poz_chars, MAX_CHARS, sizeof(int), cmp);
     *cnt = count[poz_chars[char_no - 1]];
-    *n_char = poz_chars[char_no - 1];
+    *n_char = poz_chars[char_no - 1]+FIRST_CHAR;
 }
 
 // count how many times each digram (a pair of characters, from [FIRST_CHAR,
