@@ -17,7 +17,7 @@
 #define IN_LINE_COMMENT 1
 #define IN_BLOCK_COMMENT 2
 
-#define TEST 1 // 1 dla testowania, 0 dla automatycznej oceny
+#define TEST 0 // 1 dla testowania, 0 dla automatycznej oceny
 
 int count[MAX_DIGRAMS] = {0};
 
