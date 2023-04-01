@@ -11,7 +11,7 @@
 #define MAX_ID_LEN 64
 #define MAX_IDS 1024
 
-#define TEST 1 // 1 - dla testowania,  0 - dla automatycznej oceny
+#define TEST 0 // 1 - dla testowania,  0 - dla automatycznej oceny
 
 int index_cmp(const void *, const void *);
 
@@ -31,7 +31,7 @@ char *keywords[] = {
 
 int kw_len = 32;
 
-int if_keyword(char word[MAX_ID_LEN]) {
+int if_keyword(char *word) {
     for (int i = 0; i < kw_len; i++) {
         if (strcmp(word, keywords[i]) == 0)
             return 1;
@@ -39,7 +39,7 @@ int if_keyword(char word[MAX_ID_LEN]) {
     return 0;
 }
 
-int insert_to_tab(char word[MAX_ID_LEN], int len) {
+int insert_to_tab(char *word, int len) {
     int i;
     for (i = 0; i < len; i++) {
         if (strcmp(word, tab[i]) == 0)
@@ -58,7 +58,7 @@ int check_if_correct(char c, int i) {
     return 0;
 }
 
-int has_alpha(char word[MAX_ID_LEN], size_t len) {
+int has_alpha(char *word, int len) {
     if (word[0] == '_')
         return 1;
     for (int i = 0; i < len; i++)
@@ -69,44 +69,46 @@ int has_alpha(char word[MAX_ID_LEN], size_t len) {
 
 int find_idents(FILE *stream) {
     int len = 0;
-    char prev = '\n';
-    char c;
+    char prev = '\n', c;
+    int res;
     int is_block = 0;
     int is_string = 0;
+
     while ((c = fgetc(stream)) != EOF) {
-        if (feof(stream))
-            break;
         if (!is_block && !is_string) {
             if (prev == '/' && c == '*') {  //block comment
                 is_block = 1;
             } else if (prev == '/' && c == '/') { //one line comment
-                while (c != '\n' && !feof(stream)) {
+                while (c != '\n') {
                     c = fgetc(stream);
                 }
             } else if (c == '"') { //handling string
                 is_string = 1;
-            } else if (isblank(prev) || prev == '\n' || prev == '.' || prev == '<') { //reading word
+            } else if (isblank(prev) || prev == '\n' || prev=='.' || prev=='<') { //reading word
                 char word[MAX_ID_LEN] = {};
-                for (int i = 0; check_if_correct(c, i) && !feof(stream); c = fgetc(stream), i++)
+                for (int i = 0; check_if_correct(c, i); c = fgetc(stream), i++) {
                     word[i] = c;
-
-                size_t w_len = strlen(word);
-                if (w_len > 0 && has_alpha(word, w_len))
-                    if (!if_keyword(word) && insert_to_tab(word, len))
-                        len++;
-
+                }
+                int w_len = strlen(word);
+                if (w_len > 0 && has_alpha(word, w_len)) {
+                    res = if_keyword(word);
+                    if (!res) {
+                        res = insert_to_tab(word, len);
+                        if (res) {
+                            len++;
+                        }
+                    }
+                }
             }
         } else if (c == '"') {
             is_string = 0;
         } else if (prev == '*' && c == '/') {
             is_block = 0;
         }
-//        printf("%c \n", c);
         prev = c;
     }
-    //printf("petla skonczona");
-    for (int i = 0; i < len; i++)
-        printf("%s\n", tab[i]);
+    //for (int i = 0; i < len; i++)
+    //   printf("%s\n", tab[i]);
     return len;
 }
 
@@ -123,7 +125,7 @@ int index_cmp(const void *first_arg, const void *second_arg) {
 }
 
 int main(void) {
-    setbuf(stdout, 0);
+    //setbuf(stdout, 0);
 
     char file_name[40];
     FILE *stream;
