@@ -29,45 +29,71 @@ char *keywords[] = {
         "struct", "switch", "typedef", "union",
         "unsigned", "void", "volatile", "while"};
 
+int kw_len = 32;
+
+int if_keyword(char *word) {
+    for (int i = 0; i < kw_len; i++) {
+        if (strcmp(word, keywords[i]) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+int insert_to_tab(char *word, int len) {
+    int i;
+    for (i = 0; i < len; i++) {
+        if (strcmp(word, tab[i]) == 0)
+            return 0;
+    }
+    strcpy(tab[i], word);
+    len++;
+    return 1;
+}
+
 int find_idents(FILE *stream) {
-    int next_free = 0;
+    int len = 0;
     char prev = '\n', c;
-    char **res;
-    int block = 0;
-     char *word = (char *)malloc(MAX_ID_LEN * sizeof(char));
+    int res;
+    int is_block = 0;
+    int is_string = 0;
+//    char *word = (char *) malloc(MAX_ID_LEN * sizeof(char));
 
     while ((c = getc(stream)) != EOF) {
-        if (!block) {
-            if (prev == '/' && c == '*') {
-                block = 1;
-            } else if (prev == '/' && c == '/')
+        if (!is_block && !is_string) {
+            if (prev == '/' && c == '*') {  //block comment
+                is_block = 1;
+            } else if (prev == '/' && c == '/') { //one line comment
                 while (c != '\n') {
                     c = getc(stream);
                 }
-            else if (isblank(prev) || prev == '\n') {
-                char rob[MAX_ID_LEN]={};
-                for (int i = 0; !isblank(c) && c != '/'; c = getc(stream), i++) {
-                    rob[i] = c;
-                    // word[i] = c; // potrzebny lepszy sposob aby to kopiowac (mozliwe ze dodatkowa zmienna)
+            } else if (c == '"') { //handling string
+                is_string = 1;
+            } else if (isblank(prev) || prev == '\n') { //reading word
+                char word[MAX_ID_LEN] = {};
+                for (int i = 0; c == '_' || isalpha(c) || (i > 0 && isdigit(c)); c = getc(stream), i++) {
+                    word[i] = c;
                 }
-                 strcpy(word,rob);
-//                char *word = {"hello"};
-                int len = sizeof(keywords) / sizeof(keywords[0]);
-                res = bsearch(&word, keywords, len, sizeof(*tab), (int (*)(const void *, const void *)) strcmp);
-                if (res == NULL) {
-                    res = bsearch(word, tab, MAX_IDS, sizeof(int), index_cmp);
-                    if (res == NULL) {
-                        strcpy(tab[next_free], word);
-                        next_free++;
+//                strcpy(word, word);
+                if (strlen(word) > 0) {
+                    res = if_keyword(word);
+                    if (!res) {
+                        res = insert_to_tab(word, len);
+                        if (res) {
+                            len++;
+                        }
                     }
                 }
             }
-        }
-        if (prev == '*' && c == '/') {
-            block = 0;
+        } else if (c == '"') {
+            is_string = 0;
+        } else if (prev == '*' && c == '/') {
+            is_block = 0;
         }
         prev = c;
     }
+    for (int i = 0; i < len; i++)
+        printf("%s\n", tab[i]);
+    return len;
 }
 
 int cmp(const void *first_arg, const void *second_arg) {
