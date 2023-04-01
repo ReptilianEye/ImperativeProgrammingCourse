@@ -28,12 +28,14 @@ char *keywords[] = {
     "struct", "switch", "typedef", "union",
     "unsigned", "void", "volatile", "while"};
 
-int find_idents(FILE *stream)
+int find_idents2(FILE *stream)
 {
     int next_free = 0;
     char prev = '\n', c;
     char **res;
     int block = 0;
+    char *word;
+
     while ((c = getc(stream)) != EOF)
     {
         if (!block)
@@ -47,13 +49,15 @@ int find_idents(FILE *stream)
                 {
                     c = getc(stream);
                 }
-            else if (isblank(prev) || prev=='\n')
+            else if (isblank(prev) || prev == '\n')
             {
-                char *word;
+                char rob[MAX_ID_LEN];
                 for (int i = 0; !isblank(c) && c != '/'; c = getc(stream), i++)
                 {
-                    word[i] = c; //potrzebny lepszy sposob aby to kopiowac (mozliwe ze dodatkowa zmienna)
+                    rob[i] = c;
+                    // word[i] = c; // potrzebny lepszy sposob aby to kopiowac (mozliwe ze dodatkowa zmienna)
                 }
+                strcpy(word, rob);
                 **res = bsearch(&word, &keywords, sizeof *keywords, sizeof(int), cmp);
                 if (res == NULL)
                 {
