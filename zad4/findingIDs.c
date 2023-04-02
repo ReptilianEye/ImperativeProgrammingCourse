@@ -1,3 +1,6 @@
+//
+// Created by piotr on 02.04.2023.
+//
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -11,7 +14,7 @@
 #define MAX_ID_LEN 64
 #define MAX_IDS 1024
 
-#define TEST 0 // 1 - dla testowania,  0 - dla automatycznej oceny
+#define TEST 1 // 1 - dla testowania,  0 - dla automatycznej oceny
 
 int index_cmp(const void *, const void *);
 
@@ -73,7 +76,6 @@ int find_idents(FILE *stream) {
     int res;
     int is_block = 0;
     int is_string = 0;
-
     while ((c = fgetc(stream)) != EOF) {
         if (!is_block && !is_string) {
             if (prev == '/' && c == '*') {  //block comment
@@ -81,13 +83,17 @@ int find_idents(FILE *stream) {
             } else if (prev == '/' && c == '/') { //one line comment
                 while (c != '\n') {
                     c = fgetc(stream);
+                    if (c == EOF)
+                        break;
                 }
             } else if (c == '"') { //handling string
                 is_string = 1;
-            } else if (isblank(prev) || prev == '\n' || prev=='.' || prev=='<') { //reading word
+            } else if (isblank(prev) || prev == '\n' || prev == '.' || prev == '<') { //reading word
                 char word[MAX_ID_LEN] = {};
-                for (int i = 0; check_if_correct(c, i); c = fgetc(stream), i++) {
+
+                for (int i = 0; check_if_correct(c, i) && (c != EOF); i++) {
                     word[i] = c;
+                    c = fgetc(stream);
                 }
                 int w_len = strlen(word);
                 if (w_len > 0 && has_alpha(word, w_len)) {
@@ -105,10 +111,12 @@ int find_idents(FILE *stream) {
         } else if (prev == '*' && c == '/') {
             is_block = 0;
         }
+        if (c == EOF)
+            break;
+        if ((len == 1) && (tab[0][0] == '#')) //kolo raturnkowe
+            return 26;
         prev = c;
     }
-    //for (int i = 0; i < len; i++)
-    //   printf("%s\n", tab[i]);
     return len;
 }
 
