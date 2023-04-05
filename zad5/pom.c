@@ -8,7 +8,7 @@
 
 #define SIZE 40
 
-#define TEST 0     // 1 - dla testow,  0 - dla oceny automatycznej
+#define TEST 1    // 1 - dla testow,  0 - dla oceny automatycznej
 
 // 5.1.1
 
@@ -22,21 +22,14 @@ void n_str_copy(char t2D[][STRLEN_MAX], char *ptab[], size_t n) {
 }
 
 int compar(const void *p1, const void *p2) {
-    char a[20];
-    char b[20];
+    char *a = *(char **) p1;
+    char *b = *(char **) p2;
     return strcmp(a, b);
 }
 
 // sortuje alfabetycznie n lancuchow wskazywanych w tablicy wskaznikow t
 void ptab_sort(char *ptab[], size_t n) {
-    char *temp;
-    for (int i = 0; i < n - 1; i++)
-        for (int j = 0; j < n - i - 1; j++)
-            if (compar(ptab[j], ptab[j + 1]) > 0) {
-                temp = ptab[j];
-                ptab[j] = ptab[j + 1];
-                ptab[j + 1] = temp;
-            }
+    qsort(ptab, n, sizeof(char *), compar);
 }
 
 // Porzadek odwrotny do alfabetycznego lancuchow zapisanych w tablicy t2D zapisuje w tablicy indices
@@ -45,7 +38,7 @@ void t2D_sort(const char t2D[][STRLEN_MAX], size_t indices[], size_t n) {
         indices[i] = i;
     for (int i = 0; i < n - 1; i++)
         for (int j = 0; j < n - i - 1; j++)
-            if (compar(t2D[indices[j]], t2D[indices[j + 1]]) < 0) {
+            if (strcmp(t2D[indices[j]], t2D[indices[j + 1]]) < 0) {
                 size_t temp = indices[j];
                 indices[j] = indices[j + 1];
                 indices[j + 1] = temp;
@@ -58,20 +51,36 @@ void t2D_sort(const char t2D[][STRLEN_MAX], size_t indices[], size_t n) {
 void print_t2D_ind(const char (*ptr)[STRLEN_MAX], const size_t *pindices, size_t n) {
 //void print_t2D_ind(const char ptr[][STRLEN_MAX], const size_t indices[], size_t n) {
     for (int i = 0; i < n; i++) {
-        printf("%s", ptr[pindices[i]]);
+        printf("%s \n", ptr[pindices[i]]);
     }
 }
 
 // Funkcja wypisuje w osobnych liniach n łańcuchów wskazywanych przez elementy tablicy ptab.
 void print_ptab(char *ptab[], size_t n) {
     for (int i = 0; i < n; i++)
-        printf("%s", ptab[i]);
+        printf("%s \n", ptab[i]);
 }
 
 // 5.1.2
 // A mxp, B pxn
+//AB mxn
+void print_mat(const double A[][SIZE], size_t m, size_t n) {
+    for (size_t i = 0; i < m; ++i) {
+        for (size_t j = 0; j < n; ++j) printf("%.4f ", A[i][j]);
+        printf("\n");
+    }
+}
 
 void mat_product(const double A[][SIZE], const double B[][SIZE], double AB[][SIZE], size_t m, size_t p, size_t n) {
+    double el;
+    for (int i = 0; i < m; i++)
+        for (int j = 0; j < n; j++) {
+            el = 0;
+            for (int k = 0; k < p; k++) {
+                el = el + A[i][k] * B[k][j];
+            }
+            AB[i][j] = el;
+        }
 }
 
 
@@ -82,6 +91,22 @@ void mat_product(const double A[][SIZE], const double B[][SIZE], double AB[][SIZ
 // Zalozenie: funkcja gauss moze zmienic wartosci elementow tablicy A
 
 double gauss_simplified(double A[][SIZE], size_t n) {
+    double multip;
+    double dot = 1;
+    for (int i = 0; i < n; i++) {
+        {
+            if (A[i][i] == 0)
+                return NAN;
+            dot = dot * A[i][i];
+            for (int j = i + 1; j < n; j++) {
+                multip = A[j][i] / A[i][i];
+                for (int k = 0; k < n; k++) {
+                    A[j][k] = A[j][k] - A[i][k] * multip;
+                }
+            }
+        }
+    }
+    return dot;
 }
 
 void read_mat(double A[][SIZE], size_t m, size_t n) {
@@ -90,14 +115,10 @@ void read_mat(double A[][SIZE], size_t m, size_t n) {
     }
 }
 
-void print_mat(const double A[][SIZE], size_t m, size_t n) {
-    for (size_t i = 0; i < m; ++i) {
-        for (size_t j = 0; j < n; ++j) printf("%.4f ", A[i][j]);
-        printf("\n");
-    }
-}
 
 int main(void) {
+    setbuf(stdout, 0);
+
     double A[SIZE][SIZE], B[SIZE][SIZE], C[SIZE][SIZE];
     double b[SIZE], x[SIZE];
 
