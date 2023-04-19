@@ -234,6 +234,48 @@ double gauss(double A[][SIZE], const double b[], double x[], size_t n, double ep
 // Funkcja zmienia wartosci takze w tablicy A.
 
 double matrix_inv(double A[][SIZE], double B[][SIZE], size_t n, double eps) {
+    int i, j, k;
+    double multip;
+    /* Augmenting Identity Matrix of Order n */
+    for (i = 1; i <= n; i++) {
+        for (j = 1; j <= n; j++) {
+            if (i == j) {
+                A[i][j + n] = 1;
+            } else {
+                A[i][j + n] = 0;
+            }
+        }
+    }
+    /* Applying Gauss Jordan Elimination */
+    for (i = 1; i <= n; i++) {
+        if (A[i][i] < eps) {
+            return 0;
+        }
+        for (j = 1; j <= n; j++) {
+            if (i != j) {
+                multip = A[j][i] / A[i][i];
+                for (k = 1; k <= 2 * n; k++) {
+                    A[j][k] = A[j][k] - multip * A[i][k];
+                }
+            }
+        }
+    }
+    /* Row Operation to Make Principal Diagonal to 1 */
+    for (i = 1; i <= n; i++) {
+        for (j = n + 1; j <= 2 * n; j++) {
+            A[i][j] = A[i][j] / A[i][i];
+        }
+    }
+    /* Displaying Inverse Matrix */
+//    printf("\nInverse Matrix is:\n");
+    for (i = 1; i <= n; i++) {
+        for (j = n + 1; j <= 2 * n; j++) {
+            B[i][j] = A[i][j];
+//            printf("%0.3f\t", a[i][j]);
+        }
+//        printf("\n");
+    }
+    return 0;
 }
 
 int main(void) {

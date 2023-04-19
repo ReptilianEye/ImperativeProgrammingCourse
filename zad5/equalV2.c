@@ -38,20 +38,43 @@ void print_mat(const double A[][SIZE], size_t m, size_t n) {
 
 }
 
-void print_mat2(const double A[][SIZE], int perm[], size_t n) {
-    int row;
+void print_vec2(const double x[], const int perm[], size_t n) {
+    int k;
+    for (size_t i = 0; i < n; ++i) {
+        for (k = 0; k < n; k++) {
+            if (perm[k] == i)
+                break;
+        }
+        printf("%.4f ", x[k]);
+    }
+    printf("\n");
+}
+
+void print_mat2(const double A[][SIZE], const int perm[], size_t n) {
     int k;
     for (size_t i = 0; i < n; ++i) {
         for (k = 0; k < n; k++) {
             if (perm[k] == i) break;
         }
-//        row = k;
         for (size_t j = 0; j < n; ++j)
             printf("%.4f ", A[k][j]);
         printf("\n");
     }
-    printf("\n");
+}
 
+void print_data(const double A[][SIZE], const double x[], const int perm[], size_t n) {
+    int k;
+    for (size_t i = 0; i < n; ++i) {
+        for (k = 0; k < n; k++) {
+            if (perm[k] == i)
+                break;
+        }
+        for (size_t j = 0; j < n; ++j)
+            printf("%.4f ", A[k][j]);
+        printf("%.4f \n", x[k]);
+
+    }
+    printf("\n");
 }
 
 // 5.2.1 Triangularyzacja, wyznacznik i rozwiazanie Ax=b dla  macierzy kwadratowej.
@@ -65,11 +88,14 @@ int change_with_highest(int row, int col, double A[][SIZE], int perm[], size_t n
     double max_v = -1;
     int poz_max;
     double t;
-    for (int i = row; i < n; i++) {
-        t = fabs(A[perm[i]][col]);
-        if (t > max_v) {
-            max_v = t;
-            poz_max = i;
+    for (int i = 0; i < n; i++) {
+        if (perm[i] >= col) {
+            t = A[i][col];
+            t = fabs(t);
+            if (t > max_v) {
+                max_v = t;
+                poz_max = i;
+            }
         }
     }
     int temp = perm[row];
@@ -78,71 +104,128 @@ int change_with_highest(int row, int col, double A[][SIZE], int perm[], size_t n
     return perm[row];
 }
 
-int to_diagonal(double A[][SIZE], int perm[], size_t n, double eps) {
-    int curr, j;
-    print_mat(A, n, n);
+void update_down(double A[][SIZE], int perm[], double x[], size_t n, int it, int prow) {
     double multip;
     for (int i = 0; i < n; i++) {
+        if (perm[i] > it) {
+            multip = A[i][it] / A[prow][it];
+            for (int k = 0; k < n; k++) {
+                A[i][k] = A[i][k] - A[prow][k] * multip;
+            }
+            x[i] = x[i] - x[prow] * multip;
+//            print_data(A, x, perm, n);
+        }
+    }
+}
+
+double to_diagonal_down(double A[][SIZE], int perm[], double x[], size_t n, double eps) {
+    int curr, row;
+    for (int i = 0; i < n - 1; i++) {
         {
-            curr = change_with_highest(i, i, A, perm, n);
+            for (row = 0; row < n; row++)
+                if (perm[row] == i) break;
+            curr = change_with_highest(row, i, A, perm, n);
             if (A[curr][i] < eps)
                 return 0;
-            j = i;
-            while (j < n) {
-                if (perm[j] != curr) {
-                    multip = A[perm[j]][i] / A[curr][i];
-                    for (int k = 0; k < n; k++) {
-                        A[perm[j]][k] = A[perm[j]][k] - A[curr][k] * multip;
-                    }
-//                    print_mat(A, n, n);
-                }
-                j++;
-            }
+//            print_data(A, x, perm, n);
+            update_down(A, perm, x, n, i, curr);
         }
-//        print_mat(A, n, n);
     }
     return 1;
 }
 
-void change_cols_with_rows(double A[][SIZE], const int perm[], size_t n) {
-    int i, j, k;
-    double temp;
-    for (i = 0; i < n; i++) {
-        for (k = 0; k < n; k++)
-            if (perm[k] == i) break;
-        for (j = i + 1; j < n; j++) {
-            temp = A[j][k];
-            A[j][k] = A[k][j];
-            A[k][j] = temp;
+void update_up(double A[][SIZE], int perm[], double x[], size_t n, int it, int prow) {
+
+    double multip;
+    for (int i = 0; i < n; i++) {
+        if (perm[i] < it) {
+            multip = A[i][it] / A[prow][it];
+            for (int k = 0; k < n; k++) {
+                A[i][k] = A[i][k] - A[prow][k] * multip;
+            }
+            x[i] = x[i] - x[prow] * multip;
+//            print_data(A, x, perm, n);
         }
     }
 }
 
+int to_diagonal_up(double A[][SIZE], int perm[], double x[], size_t n, double eps) {
+    int curr;
+    for (int i = (int) n - 1; i > 0; i--) {
+        {
+            for (curr = 0; curr < n; curr++) {
+                if (perm[curr] == i)
+                    break;
+            }
+            update_up(A, perm, x, n, i, curr);
+//            print_data(A, x, perm, n);
+        }
+    }
+    return 1;
+}
+
+double calc_det(const double A[][SIZE], const int perm[], size_t n) {
+    double det = 1;
+    int j;
+    for (size_t i = 0; i < n; ++i) {
+        for (j = 0; j < n; j++) {
+            if (perm[j] == i) break;
+        }
+        det = det * A[j][i];
+    }
+    return det;
+}
+
+void tidy_diag(double A[][SIZE], double x[], size_t n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++)
+            if (A[i][j] != 0) {
+                x[i] = x[i] / A[i][j];
+                A[i][j] = 1;
+
+            }
+    }
+}
+
+int reverse_perms(double x[], int perm[], size_t n) {
+    int times = 0;
+    int looking_for, i, j;
+    double temp;
+    for (i = 0; i < n; i++) {
+        if (perm[i] != i) {
+            looking_for = perm[perm[i]];
+            temp = x[i];
+            x[i] = x[perm[i]];
+            x[perm[i]] = temp;
+            perm[i] = looking_for;
+            times++;
+//            print_vec(x, n);
+        }
+    }
+    return times;
+}
 
 double gauss(double A[][SIZE], const double b[], double x[], size_t n, double eps) {
     int perm[n];
-    int res;
-    double det;
-//    print_mat(A, n, n);
     for (int i = 0; i < n; i++) {
+        x[i] = b[i];
         perm[i] = i;
     }
-    res = to_diagonal(A, perm, n, eps);
-    print_mat2(A, perm, n);
-    if (!res)
-        return res;
-    change_cols_with_rows(A, perm, n);
-    print_mat2(A, perm, n);
-    res = to_diagonal(A, perm, n, eps);
-    print_mat2(A, perm, n);
-    if (!res)
-        return res;
-    int j;
-    for (int i = 0; i < n; i++) {
-        for (j = 0; perm[j] != i; j++) {}
-        det = det * A[perm[j]][i];
-    }
+    double det;
+//    print_data(A, x, perm, n);
+
+    det = to_diagonal_down(A, perm, x, n, eps);
+    if (!det)
+        return 0;
+
+    to_diagonal_up(A, perm, x, n, eps);
+    det = calc_det(A, perm, n);
+    tidy_diag(A, x, n);
+//    print_vec(x, n);
+    int times_reversed = reverse_perms(x, perm, n);
+    det = times_reversed % 2 == 0 ? fabs(det) : -fabs(det);
     return det;
+
 }
 // 5.2.2
 // Zwraca wyznacznik i w tablicy B macierz odwrotna (jezlei wyznacznik != 0)

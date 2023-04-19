@@ -73,18 +73,24 @@ int cmp_pair(const void *a, const void *b) {
     return p1->second - p2->second;
 }
 
+int cmp(const void *a, const void *b) {
+    int *p1 = (int *) a;
+    int *p2 = (int *) b;
+    return *p1 - *p2;
+}
+
 int insert_int(int *tab, int n, int new_element) {
 }
 
 // Add pair to existing relation if not already there
-//int add_relation(pair *tab, int n, pair new_pair) {
-//    for (int i = 0; i < n; i++) {
-//        if (tab[i].first == new_pair.first && tab[i].second == new_pair.second)
-//            return n;
-//    }
-//    tab[n] = new_pair;
-//    return n + 1;
-//}
+int add_relation(pair *tab, int n, pair new_pair) {
+    for (int i = 0; i < n; i++) {
+        if (tab[i].first == new_pair.first && tab[i].second == new_pair.second)
+            return n;
+    }
+    tab[n] = new_pair;
+    return n + 1;
+}
 
 // Read number of pairs, n, and then n pairs of ints
 int read_relation(pair *relation) {
@@ -139,17 +145,17 @@ int main(void) {
             printf("%d ", is_asymmetric(relation, size));
             printf("%d\n", is_transitive(relation, size));
             break;
-//        case 2:
-//            ordered = is_partial_order(relation, size);
-//            n_domain = get_domain(relation, size, domain);
-//            printf("%d %d\n", ordered, is_total_order(relation, size));
-//            print_int_array(domain, n_domain);
-//            if (!ordered) break;
-//            int no_max_elements = find_max_elements(relation, size, max_elements);
-//            int no_min_elements = find_min_elements(relation, size, min_elements);
-//            print_int_array(max_elements, no_max_elements);
-//            print_int_array(min_elements, no_min_elements);
-//            break;
+        case 2:
+            ordered = is_partial_order(relation, size);
+            n_domain = get_domain(relation, size, domain);
+            printf("%d %d\n", ordered, is_total_order(relation, size));
+            print_int_array(domain, n_domain);
+            if (!ordered) break;
+            int no_max_elements = find_max_elements(relation, size, max_elements);
+            int no_min_elements = find_min_elements(relation, size, min_elements);
+            print_int_array(max_elements, no_max_elements);
+            print_int_array(min_elements, no_min_elements);
+            break;
 //        case 3:
 //            size_2 = read_relation(relation_2);
 //            printf("%d\n", composition(relation, size, relation_2, size_2, comp_relation));
@@ -163,12 +169,17 @@ int main(void) {
 }
 
 int is_reflexive(pair *t, int n) {
-    int prev = t[0].first - 1;
+    pair temp;
+    int x, prev = t[0].first - 1;
     for (int i = 0; i < n; i++) {
-        if (t[i].first != prev)
-            if (t[i].first != t[i].second)
+        x = t[i].first;
+        if (x != prev) {
+            temp.first = x;
+            temp.second = x;
+            if (NULL == bsearch(&temp, t, n, sizeof(pair), cmp_pair))
                 return 0;
-        prev = t[i].first;
+        }
+        prev = x;
     }
     return 1;
 }
@@ -234,4 +245,89 @@ int is_transitive(pair *t, int n) {
         }
     }
     return 1;
+}
+
+int is_partial_order(pair *t, int n) {
+    return is_reflexive(t, n) && is_antisymmetric(t, n) && is_transitive(t, n);
+}
+
+int is_total_order(pair *t, int n) {
+    return is_partial_order(t, n) && is_connected(t, n);
+}
+
+int is_connected(pair *t, int n) {
+    int checked[n];
+    for (int i = 0; i < n; i++) {
+        if (!checked[i])
+            for (int j = 0; j < n; j++) {
+                if (t[i].first == t[j].second && t[i].second == t[j].first) {
+                    checked[i] = 1;
+                    checked[j] = 1;
+                    break;
+                }
+            }
+    }
+    for (int i = 0; i < n; i++) {
+        if (!checked[i])
+            return 0;
+    }
+    return 1;
+}
+
+int find_min_elements(pair *t, int n, int *maxs) {
+    int i = 0, max_candidate, j;
+    int max_cnt = 0;
+    while (i < n) {
+        max_candidate = t[i].first;
+        for (j = 0; j < n; j++) {
+            if (t[j].second == max_candidate && t[j].first != max_candidate)
+                break;
+        }
+        if (j == n) {
+            maxs[max_cnt] = max_candidate;
+            max_cnt++;
+        }
+        while (i < n && t[i].first == max_candidate) i++;
+    }
+    return max_cnt;
+}
+
+int find_max_elements(pair *t, int n, int *mins) {
+    int i = 0, min_candidate, j;
+    int min_cnt = 0;
+    while (i < n) {
+        min_candidate = t[i].second;
+        for (j = 0; j < n; j++) {
+            if (t[j].first == min_candidate && t[j].second != min_candidate)
+                break;
+        }
+        if (j == n) {
+            mins[min_cnt] = min_candidate;
+            min_cnt++;
+        }
+        while (i < n && t[i].first == min_candidate) i++;
+    }
+    return min_cnt;
+}
+
+int get_domain(pair *t, int n, int *domain) {
+    int visited[MAX_RANGE];
+    for (int i = 0; i < MAX_RANGE; i++) {
+        visited[i] = 0;
+        domain[i] = MAX_RANGE + 1;
+    }
+    for (int i = 0; i < n; i++) {
+        visited[t[i].first] = 1;
+        visited[t[i].second] = 1;
+    }
+    int domain_cnt = 0;
+    for (int i = 0; i < n; i++) {
+        if (visited[i]) {
+            domain[domain_cnt] = i;
+            domain_cnt++;
+        }
+    }
+    qsort(domain, domain_cnt, sizeof(int), cmp);
+    return domain_cnt;
+
 }

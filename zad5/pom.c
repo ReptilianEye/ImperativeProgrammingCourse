@@ -6,8 +6,6 @@
 #include <math.h>
 #include <string.h>
 
-
-
 #define SIZE 40
 
 #define TEST 1    // 1 - dla testow,  0 - dla oceny automatycznej
