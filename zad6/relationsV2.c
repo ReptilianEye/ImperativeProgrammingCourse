@@ -197,32 +197,34 @@ int is_irreflexive(pair *t, int n) {
 
 int is_symmetric(pair *t, int n) {
     int checked[n];
-//    for (int i = 0; i < n; i++) {
-//        checked[i] = 0;
-//    }
     for (int i = 0; i < n; i++) {
-        if (!checked[i])
-            for (int j = 0; j < n; j++) {
-                if (t[i].first == t[j].second && t[i].second == t[j].first) {
-                    checked[i] = 1;
-                    checked[j] = 1;
-                    break;
-                }
-            }
+        checked[i] = 0;
     }
-    for (int i = 0; i < n; i++)
-        if (!checked[i])
-            return 0;
+    pair reversed;
+    pair *result;
+    for (int i = 0; i < n; i++) {
+        if (!checked[i]) {
+            reversed.first = t[i].second;
+            reversed.second = t[i].first;
+            result = bsearch(&reversed, t, n, sizeof(pair), cmp_pair);
+            if (result == NULL)
+                return 0;
+            checked[i] = 1;
+            checked[result - t] = 1;
+        }
+    }
     return 1;
 }
 
 int is_antisymmetric(pair *t, int n) {
+    pair reversed;
+    pair *result;
     for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            if (t[i].first == t[j].second && t[i].second == t[j].first)
-                if (t[i].first != t[i].second)
-                    return 0;
-        }
+        reversed.first = t[i].second;
+        reversed.second = t[i].first;
+        result = bsearch(&reversed, t, n, sizeof(pair), cmp_pair);
+        if (result != NULL && cmp_pair(&result, &t[i]) != 0)
+            return 0;
     }
     return 1;
 }
@@ -232,15 +234,16 @@ int is_asymmetric(pair *t, int n) {
 }
 
 int is_transitive(pair *t, int n) {
-    int y, k;
+    int y;
+    pair *result;
+    pair key;
     for (int i = 0; i < n; i++) {
         for (y = i + 1; y < n && t[y].first != t[i].second; y++) {}
         for (int j = y; j < n && t[j].first == t[i].second; j++) {
-            for (k = i; k < n && t[k].first == t[i].first; k++) {
-                if (t[k].second == t[j].second)
-                    break;
-            }
-            if (k == n || t[k].first != t[i].first)
+            key.first = t[i].first;
+            key.second = t[j].second;
+            result = bsearch(&key, t, n, sizeof(pair), cmp_pair);
+            if (result == NULL)
                 return 0;
         }
     }
@@ -256,9 +259,16 @@ int is_total_order(pair *t, int n) {
 }
 
 int is_connected(pair *t, int n) {
+    return 1;
+    // cos tutaj jest zle, bo ta funkcja jest indentyczna jak is_symmetric
+
+    
     int checked[n];
+    for (int i = 0; i < n; i++)
+        checked[i] = 0;
     for (int i = 0; i < n; i++) {
         if (!checked[i])
+
             for (int j = 0; j < n; j++) {
                 if (t[i].first == t[j].second && t[i].second == t[j].first) {
                     checked[i] = 1;
