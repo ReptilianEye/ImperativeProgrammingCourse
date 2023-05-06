@@ -33,7 +33,7 @@ double f_exp(double x) {  // Przyklad funkcji podcalkowej
 }
 
 double f_trig(double x) {  // Przyklad funkcji podcalkowej
-    double result = x * tan(x) - 1;
+    double result = x * tan(x);
     return result;
 }
 
@@ -76,34 +76,29 @@ double quad_rect_mid(Func1vFp f1, double a, double b, int n) {  // Prostokatow m
 }
 
 double quad_trap(Func1vFp func, double a, double b, int n) {  // Trapezow
-    double result = (b - a) / 2 * (func(a) + func(b));
+    double h = (b - a) / n;
+    double result = 0;
+    for (int i = 0; i < n; i++) {
+        result = result + (func(a + h * i) + func(a + h * (i + 1))) / 2 * h;
+    }
     return result;
 }
 
-double quad_simpson(Func1vFp f, double a, double b, int n) {
-    double h = (b - a) / n;
+double lerp(double a, double b, double r) {
+    return b * r + a * (1 - r);
+}
 
-    // Array for storing value of x and f(x)
-    double x[n], fx[n];
+double quad_simpson(Func1vFp f1, double a, double b, int n) {  // Simpsona
+    double s = 0;
+    double sp = a; // start point
+    double ep = a; // end point
 
-    // Calculating values of x and f(x)
     for (int i = 1; i <= n; i++) {
-        x[i] = a + i * h;
-        fx[i] = f(x[i]);
+        sp = ep;
+        ep = lerp(a, b, (double) i / n);
+        s += (ep - sp) / 6 * (f1(sp) + 4 * f1((sp + ep) / 2) + f1(ep));
     }
-
-    // Calculating result
-    double res = 0;
-    for (int i = 1; i <= n; i++) {
-        if (i == 0 || i == n)
-            res += fx[i];
-        else if (i % 2 != 0)
-            res += 4 * fx[i];
-        else
-            res += 2 * fx[i];
-    }
-    res = res * (h / 3);
-    return res;
+    return s;
 }
 
 // Definiowanie nazwy dla typu wskaznika do funkcji obliczającej kwadraturę funkcji jednej zmiennej
@@ -126,22 +121,20 @@ double quad_select(int fun_no, int quad_no, double a, double b, int n) {
 
 // Algorytm adaptacyjny obliczania kwadratury,
 double recurs(Func1vFp f, double a, double b, double S, double delta, QuadratureFp quad, int level) {
-    int n = 1;
-    double left_s = quad(f, a, (a + b) / 2, n); //jakos obliczyc prosta;
-    double right_s = quad(f, a, (a + b) / 2, n);
+    double left_s = quad(f, a, (a + b) / 2, 1);
+    double right_s = quad(f, (a + b) / 2, b, 1);
     if (fabs(left_s + right_s - S) <= delta)
         return left_s + right_s;
     else if (level < RECURS_LEVEL_MAX)
-        return recurs(f, a, (a + b) / 2, left_s, delta, quad, level + 1) +
-               recurs(f, (a + b) / 2, b, left_s, delta, quad, level + 1);
+        return recurs(f, a, (a + b) / 2, left_s, delta / 2, quad, level + 1) +
+               recurs(f, (a + b) / 2, b, right_s, delta / 2, quad, level + 1);
     else return NAN;
 }
 
 // Funkcja inicjująca rekurencję
 double init_recurs(Func1vFp f, double a, double b, double delta, QuadratureFp quad) {
     double S = quad(f, a, b, 1);
-    double result = recurs(f, a, b, S, delta, quad, 0);
-    return result;
+    return recurs(f, a, b, S, delta, quad, 0);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -190,17 +183,49 @@ double dbl_integr(Func2vFp f, double x1, double x2, int nx, double y1, double y2
         }
         sum = sum + fxsum * hx;
     }
-    return sum*hy;
+    return sum * hy;
 }
 
 // Oblicza kwadrature prostokatow midpoint dla calki podwojnej nad obszarem normalnym wzgledem osi 0x
 double dbl_integr_normal_1(Func2vFp f, double x1, double x2, int nx, double hy, Func1vFp fg, Func1vFp fh) {
+    double result = 0.0;
+    int ny;
+    double dy, y1, y2;
+    double dx = (x2 - x1) / nx;
+    double y, x = x1 + dx / 2;
+    for (int i = 0; i < nx; i++) {
 
+        y1 = fg(x);
+        y2 = fh(x);
+        ny = ceil((y2 - y1) / hy);
+        dy = (y2 - y1) / ny;
+        y = y1 + dy / 2;
+        for (int j = 0; j < ny; j++) {
+            result += f(x, y) * dy * dx;
+            y = y + dy;
+        }
+        x = x + dx;
+    }
+    return result;
 }
 
 // Oblicza kwadrature prostokatow leftpoint dla calki podwojnej nad obszarami normalnymi wzgledem osi 0x
 double
-dbl_integr_normal_n(Func2vFp f, double x1, double x2, int nx, double y1, double y2, int ny, Func1vFp fg, Func1vFp fh) {
+dbl_integr_normal_n(Func2vFp f, double x1, double x2, int nx, double y1, double y2, int ny, Func1vFp fg,
+                    Func1vFp fh) {
+    double result = 0.0;
+    double dx = (x2 - x1) / nx;
+    double x = x1;
+    double g, h, dy;
+    for (int i = 0; i < nx; i++) {
+        g = fg(x);
+        h = fh(x);
+
+//            x = x + dx;
+    }
+
+    return result;
+
 }
 
 ///////////////////////////////////////////////////////////////
@@ -245,8 +270,9 @@ double trpl_quad_rect(FuncNvFp f, const double variable_lim[][2], const int tn[]
 
 // Oblicza calke wielokrotna (funkcji n zmiennych) "nad" n wymiarowym hiperprostopadloscianem z predykatem wykluczajacym jego czesci (jezeli boundary != NULL).
 // Metoda prostokatow midpoint wzdluz kazdej zmiennej.
-void recur_quad_rect_mid(double *psum, FuncNvFp f, int variable_no, double tvariable[], const double variable_lim[][2],
-                         const int tn[], int level, BoundNvFp boundary) {}
+void
+recur_quad_rect_mid(double *psum, FuncNvFp f, int variable_no, double tvariable[], const double variable_lim[][2],
+                    const int tn[], int level, BoundNvFp boundary) {}
 
 int main(void) {
     setbuf(stdout, 0);
@@ -257,15 +283,12 @@ int main(void) {
     int tn[N_MAX];
 
     if (TEST) printf("Wpisz numer testu [1, 7]: ");
-//    scanf("%d", &to_do);
-    to_do = 3;
+    scanf("%d", &to_do);
+//    to_do = 4;
     switch (to_do) {
         case 1: // 7.1.1 wybor funkcji i metody
             if (TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow: ");
-            a = 0;
-            b = 0.75;
-            n = 25;
-//            scanf("%lf %lf %d", &a, &b, &n);
+            scanf("%lf %lf %d", &a, &b, &n);
             for (int q = 0; q < 5; ++q) {
                 for (int f = 0; f < 4; ++f) {
                     printf("%.5f ", quad_select(f, q, a, b, n));
@@ -275,20 +298,16 @@ int main(void) {
             break;
         case 2: // 7.1.2 rekurencyjny algorytm adaptacyjny
             if (TEST) printf("Nr funkcji (0-3) i metody (0-4): ");
-//            scanf("%d %d", &integrand_fun_no, &method_no);
-            integrand_fun_no = 1;
-            method_no = 4;
+            scanf("%d %d", &integrand_fun_no, &method_no);
             if (TEST) printf("Wpisz przedzial calkowania i tolerancje bledu: ");
-            a = 0, b = 3, delta = 0.01;
-//            scanf("%lf %lf %lf", &a, &b, &delta);
+            scanf("%lf %lf %lf", &a, &b, &delta);
             printf("%.5f\n", init_recurs(func_tab[integrand_fun_no], a, b, delta, quad_tab[method_no]));
             break;
         case 3: // 7.2.1 calka podwojna nad prostokatem
             if (TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow wzdluz x: ");
-            x1 = 0, x2 = 1, nx = 100, y1 = 0, y2 = 1, ny = 100;
-//            scanf("%lf %lf %d", &x1, &x2, &nx);
+            scanf("%lf %lf %d", &x1, &x2, &nx);
             if (TEST) printf("Wpisz przedzial calkowania i liczbe podprzedzialow wzdluz y: ");
-//            scanf("%lf %lf %d", &y1, &y2, &ny);
+            scanf("%lf %lf %d", &y1, &y2, &ny);
             printf("%.5f\n", dbl_integr(func2v_2, x1, x2, nx, y1, y2, ny));
             break;
         case 4: // 7.2.2 calka podwojna nad obszarem normalnym
@@ -331,7 +350,8 @@ int main(void) {
             sum = 0.;
             recur_quad_rect_mid(&sum, funcNv, n, tvariable, variable_lim, tn, 0, flag ? boundNv
                                                                                       : NULL);//        recur_quad_rect_mid(&sum, func3v_1, n, tvariable, variable_lim, tn, 0, flag?bound3v_2:NULL);
-//        recur_quad_rect(&sum, funcNv, n, tvariable, variable_lim, tn, tqr, 0, flag?boundNv:NUL
+            printf("%.5f", sum);
+            //        recur_quad_rect(&sum, funcNv, n, tvariable, variable_lim, tn, tqr, 0, flag?boundNv:NUL
             break;
         default:
             printf("Numer testu spoza zakresu [1, 7] %d", to_do);
