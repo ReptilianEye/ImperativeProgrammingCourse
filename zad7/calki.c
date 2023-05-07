@@ -63,16 +63,11 @@ double quad_rect_right(Func1vFp f1, double a, double b, int n) {  // Prostokatow
 }
 
 double quad_rect_mid(Func1vFp f1, double a, double b, int n) {  // Prostokatow midpoint
-    double result;
-    double h = (b - a) / n;
     double sum = 0;
-    for (int i = 0; i < n / 2 + 1; i++) {
-        sum = sum + f1((a + b) / 2 - i * h);
-        if (i > 0)
-            sum = sum + f1((a + b) / 2 + i * h);
-    }
-    result = sum * h;
-    return result;
+    double dx = (b - a) / n;
+    for (int i = 0; i < n; i++)
+        sum += f1((2 * (a + i * dx) + dx) / 2) * dx;
+    return sum;
 }
 
 double quad_trap(Func1vFp func, double a, double b, int n) {  // Trapezow
@@ -211,21 +206,34 @@ double dbl_integr_normal_1(Func2vFp f, double x1, double x2, int nx, double hy, 
 
 // Oblicza kwadrature prostokatow leftpoint dla calki podwojnej nad obszarami normalnymi wzgledem osi 0x
 double
-dbl_integr_normal_n(Func2vFp f, double x1, double x2, int nx, double y1, double y2, int ny, Func1vFp fg,
-                    Func1vFp fh) {
-    double result = 0.0;
-    double dx = (x2 - x1) / nx;
-    double x = x1;
-    double g, h, dy;
-    for (int i = 0; i < nx; i++) {
-        g = fg(x);
-        h = fh(x);
+dbl_integr_normal_n(Func2vFp f, double x1, double x2, int nx, double y1, double y2, int ny, Func1vFp fg, Func1vFp fh) {
+    double s = 0;
 
-//            x = x + dx;
+    double hy = (y2 - y1) / ny;
+    double sx, sy;
+    double ex = x1, ey;
+    for (int ix = 1; ix <= nx; ix++) {
+        double ys = 0;
+        sx = ex;
+        ex = lerp(x1, x2, (double) ix / nx);
+
+        double my1 = fg(sx);
+        if (my1 < y1) my1 = y1;
+        double my2 = fh(sx);
+        if (my2 > y2) my2 = y2;
+
+        int mny = ceil((my2 - my1) / hy);
+
+        ey = my1;
+
+        for (int iy = 1; iy <= mny; iy++) {
+            sy = ey;
+            ey = lerp(my1, my2, (double) iy / mny);
+            ys += (ey - sy) * f(sx, sy);
+        }
+        s += (ex - sx) * ys;
     }
-
-    return result;
-
+    return s;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -266,13 +274,61 @@ int boundNv(const double v[], int n) {
 // Oblicza calke potrojna "nad" prostopadloscianem z predykatem wykluczajacym jego czesci (jezeli boundary != NULL).
 // Metoda prostokatow wstecz (rightpoint) wzdluz kazdej zmiennej.
 double trpl_quad_rect(FuncNvFp f, const double variable_lim[][2], const int tn[], BoundNvFp boundary) {
+    double sum = 0;
+
+    int nx = tn[0];
+    double x2 = variable_lim[0][1];
+    double x1 = variable_lim[0][0];
+    double dx = (x2 - x1) / nx;
+
+    int ny = tn[1];
+    double y2 = variable_lim[1][1];
+    double y1 = variable_lim[1][0];
+    double dy = (y2 - y1) / ny;
+
+    int nz = tn[2];
+    double z2 = variable_lim[2][1];
+    double z1 = variable_lim[2][0];
+    double dz = (z2 - z1) / nz;
+
+    double v[3];
+
+    v[0] = x1 + dx;
+    for (int i = 0; i < nx; i++) {
+        v[1] = y1 + dy;
+        for (int j = 0; j < ny; j++) {
+            v[2] = z1 + dz;
+            for (int k = 0; k < nz; k++) {
+                if (boundary == NULL || boundary(v, 3)) sum += f(v, 3) * dx * dy * dz;
+                v[2] += dz;
+            }
+            v[1] += dy;
+        }
+        v[0] += dx;
+    }
+    return sum;
 }
 
 // Oblicza calke wielokrotna (funkcji n zmiennych) "nad" n wymiarowym hiperprostopadloscianem z predykatem wykluczajacym jego czesci (jezeli boundary != NULL).
 // Metoda prostokatow midpoint wzdluz kazdej zmiennej.
 void
-recur_quad_rect_mid(double *psum, FuncNvFp f, int variable_no, double tvariable[], const double variable_lim[][2],
-                    const int tn[], int level, BoundNvFp boundary) {}
+recur_quad_rect_mid(double *psum, FuncNvFp f, int variable_name, double vec[], const double variable_limit[][2],
+                    const int tn[], int level, BoundNvFp boundary) {
+    if (level == variable_name) {
+        double du = 1;
+        for (int vi = 0; vi < variable_name; vi++)
+            du *= (variable_limit[vi][1] - variable_limit[vi][0]) / tn[vi];
+        if (boundary == NULL || boundary(vec, variable_name)) *psum += du * f(vec, variable_name);
+        return;
+    }
+
+    double n = tn[level];
+    double u1 = variable_limit[level][0], u2 = variable_limit[level][1];
+    for (int i = 1; i <= n; i++) {
+        vec[level] = lerp(u1, u2, ((double) i - 0.5) / n);
+        recur_quad_rect_mid(psum, f, variable_name, vec, variable_limit, tn, level + 1, boundary);
+    }
+}
 
 int main(void) {
     setbuf(stdout, 0);
