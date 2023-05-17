@@ -50,8 +50,16 @@ void print_mat(int rows, int cols, int *t) {
 }
 
 // ex 1 end
-int read_char_lines(char *array[]) {
 
+int read_char_lines(char *array[]) {
+    char line[BUF_SIZE], *p, *e;
+    int v, n = 0;
+    while (fgets(line, sizeof(line), stdin)) {
+        int *ptr = (int *) malloc(sizeof(char)*strlen(line));
+        array[n] = ptr;
+        strcpy(array[n],line);
+        n++;
+    }
 }
 
 void write_char_line(char *array[], int n) {
@@ -66,31 +74,34 @@ void delete_lines(char *array[]) {
 
 int read_int_lines_cont(int *ptr_array[]) {
     char line[BUF_SIZE], *p, *e;
-    int v, lines_n = 0;
+    int v, n = 0;
     while (fgets(line, sizeof(line), stdin)) {
         int *ptr = (int *) malloc(sizeof(int));
-        ptr_array[lines_n] = ptr;
-        lines_n++;
+        ptr_array[n] = ptr;
+        n++;
         p = line;
+        int elems =0;
         for (p = line;; p = e) {
+            ptr = (int *) realloc(ptr,n+1);
             v = strtol(p, &e, 10);
             if (p == e)
                 break;
-            *ptr = v;
-            ptr++;
+            *(ptr+elems) = v;
+            elems++;
         }
 
     }
-    return lines_n;
+    return n;
 }
 
 void write_int_line_cont(int *ptr_array[], int n) {
     int *ptr = ptr_array[n];
-    while (*ptr != NULL) // or int n_elem = sizeof(ptr_array[n])/sizeof(*ptr_array[n])
+    while (*ptr) // or int n_elem = sizeof(ptr_array[n])/sizeof(*ptr_array[n])
     {
         printf("%d ", *ptr);
-        *ptr = *(ptr + 1);
+        ptr++;
     }
+    printf("\n");
 }
 //ex 2 end
 
@@ -102,19 +113,58 @@ typedef struct {
 
 //ex 3
 int read_int_lines(line_type lines_array[]) {
+    char line[BUF_SIZE], *p, *e;
+    int v, n = 0;
+    while (fgets(line, sizeof(line), stdin)) {
+        line_type new_row;
+        int *ptr = (int *) malloc(sizeof(int));
+        new_row.values=ptr;
+        n++;
+        p = line;
+        int elems =0;
+        int s = 0;
+        for (p = line;; p = e) {
+            ptr = (int *) realloc(ptr,n+1);
+            v = strtol(p, &e, 10);
+            if (p == e)
+                break;
+            *(ptr+elems) = v;
+            s += v;
+            elems++;
+        }
+        new_row.len = elems;
+        new_row.average = s/elems;
+        lines_array[n] = new_row;
+
+    }
+    return n;
 }
 
 void write_int_line(line_type lines_array[], int n) {
+    int *ptr = lines_array[n].values;
+    while (*ptr) // or int n_elem = sizeof(ptr_array[n])/sizeof(*ptr_array[n])
+    {
+        printf("%d ", *ptr);
+        ptr++;
+    }
+    printf("\n");
 }
 
 //ex 3 end
 void delete_int_lines(line_type array[], int line_count) {
+    for (int i  =0;i<line_count;i++)
+        free(array[i].values);
 }
 
 int cmp(const void *a, const void *b) {
+    line_type* p1 = (line_type*)a;
+    line_type* p2 = (line_type*)b;
+    return p1->average-p2->average;
+
 }
 
 void sort_by_average(line_type lines_array[], int line_count) {
+    qsort(lines_array,line_count,sizeof(line_type),cmp);
 }
 
 typedef struct {
