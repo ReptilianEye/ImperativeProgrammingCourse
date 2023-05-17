@@ -55,9 +55,12 @@ int read_char_lines(char *array[]) {
 }
 
 void write_char_line(char *array[], int n) {
+    printf("%s", array[n]);
 }
 
 void delete_lines(char *array[]) {
+    for (int i = 0; array[i] != NULL; i++)
+        free(array[i]);
 }
 //ex 2
 
@@ -208,6 +211,7 @@ int main(void) {
             ptr_array[0] = continuous_array;
             read_int_lines_cont(ptr_array);
             write_int_line_cont(ptr_array, n);
+
             break;
         case 3:
             n = read_int() - 1;
