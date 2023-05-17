@@ -96,11 +96,14 @@ int read_int_lines_cont(int *ptr_array[]) {
 
 void write_int_line_cont(int *ptr_array[], int n) {
     int *ptr = ptr_array[n];
-    while (*ptr) // or int n_elem = sizeof(ptr_array[n])/sizeof(*ptr_array[n])
+    do
     {
         printf("%d ", *ptr);
         ptr++;
-    }
+        if (*ptr==0)
+        continue;
+    }while (*ptr); // or int n_elem = sizeof(ptr_array[n])/sizeof(*ptr_array[n])
+    
     printf("\n");
 }
 //ex 2 end
@@ -118,8 +121,6 @@ int read_int_lines(line_type lines_array[]) {
     while (fgets(line, sizeof(line), stdin)) {
         line_type new_row;
         int *ptr = (int *) malloc(sizeof(int));
-        new_row.values=ptr;
-        n++;
         p = line;
         int elems =0;
         int s = 0;
@@ -132,21 +133,21 @@ int read_int_lines(line_type lines_array[]) {
             s += v;
             elems++;
         }
+        new_row.values=ptr;
         new_row.len = elems;
         new_row.average = s/elems;
         lines_array[n] = new_row;
-
+        n++;
     }
     return n;
 }
 
 void write_int_line(line_type lines_array[], int n) {
-    int *ptr = lines_array[n].values;
-    while (*ptr) // or int n_elem = sizeof(ptr_array[n])/sizeof(*ptr_array[n])
-    {
-        printf("%d ", *ptr);
-        ptr++;
-    }
+    line_type row = lines_array[n];
+    for (int i  = 0; i < row.len;i++)
+        printf("%d ",row.values[i]);
+    printf("\n");
+    printf("%.2f",row.average);
     printf("\n");
 }
 
@@ -198,7 +199,7 @@ void make_CSR(triplet *triplet_array, int n_triplets, int rows, int *V, int *C, 
         C[i] = curr.c;
         R[curr.r + 1]++;
     }
-    for (int i = 1; i < n_triplets; i++) {
+    for (int i = 1; i <= rows; i++) {
         R[i] = R[i] + R[i - 1];
     }
 }
@@ -273,6 +274,7 @@ int main(void) {
             n = read_int() - 1;
             lines_counter = read_int_lines(int_lines_array);
             sort_by_average(int_lines_array, lines_counter);
+
             write_int_line(int_lines_array, n);
             delete_int_lines(int_lines_array, lines_counter);
             break;
