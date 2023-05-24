@@ -32,10 +32,10 @@ typedef void(*print_ptr)(const void *);
 // Allocate vector to initial capacity (block_size elements),
 // Set element_size, size (to 0), capacity
 void init_vector(Vector *vector, size_t block_size, size_t element_size) {
-    vector->data = malloc(block_size * element_size);
+    vector->capacity = block_size * element_size;
+    vector->data = malloc(vector->capacity);
     vector->element_size = element_size;
     vector->size = 0;
-    vector->capacity = block_size;
 }
 
 // If new_capacity is greater than the current capacity,
@@ -54,8 +54,13 @@ void reserve(Vector *vector, size_t new_capacity) {
 // If the current size is less than new_size,
 // additional zero-initialized elements are appended
 void resize(Vector *vector, size_t new_size) {
-    vector->data = realloc(vector->data, new_size * vector->element_size);
-    
+ if (new_size > vector->size)
+    {
+    void *d=vector->data;
+    void* p=realloc(vector->data, new_size * vector->element_size);
+    vector->data =p;
+     }
+     vector->size = new_size;
 }
 
 // Add element to the end of the vector
@@ -63,7 +68,8 @@ void push_back(Vector *vector, void *value) {
     if (vector->size == vector->capacity) {
         reserve(vector, vector->capacity * 2);
     }
-    *(void **) (vector->data + vector->size) = value;
+    memcpy(((char *) (vector->data) + vector->size*vector->element_size),(char *)value,vector->element_size);
+    // *((char *) (vector->data) + vector->size*vector->element_size) = *value;
     vector->size++;
 }
 
@@ -75,6 +81,9 @@ void clear(Vector *vector) {
 
 // Insert new element at index (0 <= index <= size) position
 void insert(Vector *vector, size_t index, void *value) {
+    if (vector->size == vector->capacity) {
+        reserve(vector, vector->capacity * 2);
+    }
     vector->data = memcpy(vector->data + index + 1, vector->data + index, vector->element_size);
     *(void **) (vector->data + index) = value;
     vector->size++;
@@ -162,14 +171,14 @@ int is_older_than_25(void *person) {
 
 // print integer value
 void print_int(const void *v) {
-    int val = (int) v;
-    printf("%d", val);
+    int val = *(int*) v;
+    printf("%d ", val);
 }
 
 // print char value
 void print_char(const void *v) {
     char val = (char) v;
-    printf("%c", val);
+    printf("%c ", val);
 }
 
 // print structure Person
@@ -180,10 +189,12 @@ void print_person(const void *v) {
 
 // print capacity of the vector and its elements
 void print_vector(Vector *vector, print_ptr print) {
-    printf("%d ", (int) vector->capacity);
+    printf("%d ", (int) vector->capacity/vector->element_size);
     for (int i = 0; i < vector->size; i++) {
-        print((vector->data + i));
+        print(&vector->data[i*vector->element_size]);
+        // print( vector->data + i*vector->element_size);
     }
+    printf("\n");
 }
 
 // read int value
@@ -207,6 +218,13 @@ void read_person(void *value) {
     strcpy(p->first_name, first_name);
     strcpy(p->last_name, last_name);
 }
+void* safe_malloc(size_t elem_size)
+{
+    void* p = malloc(elem_size);
+    if (p == NULL)
+        exit(1);
+    return p;
+}
 
 void vector_test(Vector *vector, size_t block_size, size_t elem_size, int n, read_ptr read,
                  cmp_ptr cmp, predicate_ptr predicate, print_ptr print) {
@@ -216,10 +234,13 @@ void vector_test(Vector *vector, size_t block_size, size_t elem_size, int n, rea
     for (int i = 0; i < n; ++i) {
         char op;
         scanf(" %c", &op);
+        // printf("%d %d",vector->size,vector->capacity);
         switch (op) {
             case 'p': // push_back
                 read(v);
                 push_back(vector, v);
+                print_vector(vector, print);
+
                 break;
             case 'i': // insert
                 scanf("%zu", &index);
@@ -262,6 +283,8 @@ void vector_test(Vector *vector, size_t block_size, size_t elem_size, int n, rea
 }
 
 int main(void) {
+    setbuf(stdout, 0);
+
     int to_do, n;
     Vector vector_int, vector_char, vector_person;
 
