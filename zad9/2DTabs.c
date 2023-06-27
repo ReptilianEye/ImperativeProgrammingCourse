@@ -101,12 +101,12 @@ void write_int_line_cont(int *ptr_array[], int n) {
         printf("%d ", *ptr);
         ptr++;
         if (*ptr==0)
-        continue;
+            continue;
     }while (*ptr); // or int n_elem = sizeof(ptr_array[n])/sizeof(*ptr_array[n])
-    
+
     printf("\n");
 }
-//ex 2 end
+
 
 typedef struct {
     int *values;

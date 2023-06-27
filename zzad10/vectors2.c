@@ -42,8 +42,8 @@ void init_vector(Vector *vector, size_t block_size, size_t element_size) {
 // new storage is allocated, otherwise the function does nothing.
 void reserve(Vector *vector, size_t new_capacity) {
     if (new_capacity > vector->capacity) {
-        vector->data = realloc(vector->data, new_capacity);
         vector->capacity = new_capacity;
+        vector->data = realloc(vector->data, vector->capacity * vector->element_size);
     }
 }
 
@@ -54,13 +54,10 @@ void reserve(Vector *vector, size_t new_capacity) {
 // If the current size is less than new_size,
 // additional zero-initialized elements are appended
 void resize(Vector *vector, size_t new_size) {
- if (new_size > vector->size)
-    {
-    void *d=vector->data;
-    void* p=realloc(vector->data, new_size * vector->element_size);
-    vector->data =p;
-     }
-     vector->size = new_size;
+    if (new_size > vector->size) {
+        reserve(vector, new_size);
+    }
+    vector->size = new_size;
 }
 
 // Add element to the end of the vector
@@ -68,7 +65,7 @@ void push_back(Vector *vector, void *value) {
     if (vector->size == vector->capacity) {
         reserve(vector, vector->capacity * 2);
     }
-    memcpy(((char *) (vector->data) + vector->size*vector->element_size),(char *)value,vector->element_size);
+    memcpy(((char *) (vector->data) + vector->size * vector->element_size), (char *) value, vector->element_size);
     // *((char *) (vector->data) + vector->size*vector->element_size) = *value;
     vector->size++;
 }
@@ -81,26 +78,30 @@ void clear(Vector *vector) {
 
 // Insert new element at index (0 <= index <= size) position
 void insert(Vector *vector, size_t index, void *value) {
-    if (vector->size == vector->capacity) {
+    if (vector->size*vector->element_size >= vector->capacity) {
         reserve(vector, vector->capacity * 2);
     }
-    vector->data = memcpy(vector->data + index + 1, vector->data + index, vector->element_size);
-    *(void **) (vector->data + index) = value;
+    Person p = *(Person*)value;
+    memcpy((char *) (vector->data) + (index + 1) * vector->element_size,
+           (char *) (vector->data) + index * vector->element_size, vector->element_size * (vector->size - index));
+    memcpy(((char *) (vector->data) + index * vector->element_size), (char *) value, vector->element_size);
     vector->size++;
 }
 
 // Erase element at position index
 void erase(Vector *vector, size_t index) {
-    vector->data = memcpy(vector->data + index - 1, vector->data + index, vector->element_size);
+    memcpy((char *) vector->data + index * vector->element_size,
+           (char *) vector->data + (index + 1) * vector->element_size,
+           vector->element_size * (vector->size - index));
     vector->size--;
 }
 
 // Erase all elements that compare equal to value from the container
 void erase_value(Vector *vector, void *value, cmp_ptr cmp) {
     for (int i = 0; i < vector->size; i++) {
-        if (cmp(vector->data + i, value) == 0) {
+        if (cmp((char *) vector->data + i * vector->element_size, value) == 0) {
             erase(vector, i);
-            continue;
+            i--;
         }
     }
 }
@@ -108,9 +109,9 @@ void erase_value(Vector *vector, void *value, cmp_ptr cmp) {
 // Erase all elements that satisfy the predicate from the vector
 void erase_if(Vector *vector, int (*predicate)(void *)) {
     for (int i = 0; i < vector->size; i++) {
-        if (predicate(vector->data + i)) {
+        if (predicate((char *) vector->data + i * vector->element_size)) {
             erase(vector, i);
-            continue;
+            i--;
         }
     }
 }
@@ -122,8 +123,8 @@ void shrink_to_fit(Vector *vector) {
 
 // integer comparator
 int int_cmp(const void *v1, const void *v2) {
-    int *a = (int *) v1;
-    int *b = (int *) v2;
+    int a = *(int *) v1;
+    int b = *(int *) v2;
     return a - b;
 }
 
@@ -152,15 +153,15 @@ int person_cmp(const void *p1, const void *p2) {
 
 // predicate: check if number is even
 int is_even(void *value) {
-    int val = (int) value;
-    return (val % 2 == 1);
+    int *val = (int *) value;
+    return (*val % 2 == 1);
 }
 
 // predicate: check if char is a vowel
 int is_vowel(void *value) {
-    char c = (char) value;
-    c = tolower(c);
-    return (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u');
+    char c = *(char *) value;
+    c = (char) tolower(c);
+    return (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'y');
 }
 
 // predicate: check if person is older than 25
@@ -171,27 +172,27 @@ int is_older_than_25(void *person) {
 
 // print integer value
 void print_int(const void *v) {
-    int val = *(int*) v;
-    printf("%d ", val);
+    printf("%d ", *(int *) v);
 }
 
 // print char value
 void print_char(const void *v) {
-    char val = (char) v;
-    printf("%c ", val);
+    char *a = (char *) v;
+    printf("%c ", *a);
 }
 
 // print structure Person
 void print_person(const void *v) {
     Person *p = (Person *) v;
-    printf("%d %s %s", p->age, p->first_name, p->last_name);
+    printf("%d %s %s\n", p->age, p->first_name, p->last_name);
 }
 
 // print capacity of the vector and its elements
 void print_vector(Vector *vector, print_ptr print) {
-    printf("%d ", (int) vector->capacity/vector->element_size);
+//    printf("%d\n", (int) vector->size);
+    printf("%zu\n", (int) vector->capacity / vector->element_size);
     for (int i = 0; i < vector->size; i++) {
-        print(&vector->data[i*vector->element_size]);
+        print(&vector->data[i * vector->element_size]);
         // print( vector->data + i*vector->element_size);
     }
     printf("\n");
@@ -199,28 +200,25 @@ void print_vector(Vector *vector, print_ptr print) {
 
 // read int value
 void read_int(void *value) {
-    scanf("%d", (int *) value);
+    scanf(" %d", (int *) value);
 }
 
 // read char value
 void read_char(void *value) {
-    scanf("%c", (char *) value);
+    char *p = (char *) value;
+    scanf(" %c", p);
 }
 
 // read struct Person
 void read_person(void *value) {
     Person *p = (Person *) value;
     int age;
-    char *first_name = "";
-    char *last_name = "";
-    scanf("%d %s %s", &age, first_name, last_name);
+    scanf("%d %s %s", &age, p->first_name, p->last_name);
     p->age = age;
-    strcpy(p->first_name, first_name);
-    strcpy(p->last_name, last_name);
 }
-void* safe_malloc(size_t elem_size)
-{
-    void* p = malloc(elem_size);
+
+void *safe_malloc(size_t elem_size) {
+    void *p = malloc(elem_size);
     if (p == NULL)
         exit(1);
     return p;
@@ -235,17 +233,18 @@ void vector_test(Vector *vector, size_t block_size, size_t elem_size, int n, rea
         char op;
         scanf(" %c", &op);
         // printf("%d %d",vector->size,vector->capacity);
+        print_vector(vector, print);
         switch (op) {
             case 'p': // push_back
                 read(v);
                 push_back(vector, v);
-                print_vector(vector, print);
 
                 break;
             case 'i': // insert
                 scanf("%zu", &index);
                 read(v);
                 insert(vector, index, v);
+
                 break;
             case 'e': // erase
                 scanf("%zu", &index);
@@ -278,7 +277,7 @@ void vector_test(Vector *vector, size_t block_size, size_t elem_size, int n, rea
         }
     }
     print_vector(vector, print);
-    free(vector->data);
+//    free(vector->data);
     free(v);
 }
 
