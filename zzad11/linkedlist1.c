@@ -8,12 +8,13 @@
 #include <ctype.h>
 
 #define BUFFER_SIZE 1000
-#define MEMORY_ALLOCATION_ERROR  -1
-#define FILE_OPEN_ERROR          -2
-#define LIST_ERROR               -3
-#define TEST 1               // 1 dla testowania, 0 dla automatycznej oceny
+#define MEMORY_ALLOCATION_ERROR -1
+#define FILE_OPEN_ERROR -2
+#define LIST_ERROR -3
+#define TEST 1 // 1 dla testowania, 0 dla automatycznej oceny
 
-typedef struct tagListElement {
+typedef struct tagListElement
+{
     struct tagListElement *next;
     void *data;
 } ListElement;
@@ -24,7 +25,8 @@ typedef void (*DataFp)(void *);
 
 typedef int (*CompareDataFp)(const void *, const void *);
 
-typedef struct tagList {
+typedef struct tagList
+{
     ListElement *head;
     ListElement *tail;
     int size;
@@ -37,16 +39,20 @@ typedef struct tagList {
 ////////////////////////////////////////////////
 
 // Funkcje pomocnicze
-void *safe_malloc(size_t size) {
+void *safe_malloc(size_t size)
+{
     void *ptr = malloc(size);
-    if (ptr) return ptr;
+    if (ptr)
+        return ptr;
     printf("malloc error\n");
     exit(MEMORY_ALLOCATION_ERROR);
 }
 
-char *safe_strdup(char *str) {
+char *safe_strdup(char *str)
+{
     char *ptr = strdup(str);
-    if (ptr) return ptr;
+    if (ptr)
+        return ptr;
     printf("safe_strdup error\n");
     exit(MEMORY_ALLOCATION_ERROR);
 }
@@ -55,7 +61,8 @@ char *safe_strdup(char *str) {
 // Funkcje uniwersalne (ogolnego przeznaczenia) obsługi listy
 
 // Inicjuje listę
-void init_List(List *list, ConstDataFp dump, DataFp free, CompareDataFp cmp, DataFp modify) {
+void init_List(List *list, ConstDataFp dump, DataFp free, CompareDataFp cmp, DataFp modify)
+{
     list->head = NULL;
     list->tail = NULL;
     list->size = 0;
@@ -66,21 +73,26 @@ void init_List(List *list, ConstDataFp dump, DataFp free, CompareDataFp cmp, Dat
 }
 
 // Wypisuje dane elemntów listy
-void dumpList(const List *list) {
-    if (list->dumpData == NULL) return;
+void dumpList(const List *list)
+{
+    if (list->dumpData == NULL)
+        return;
     ListElement *i;
     for (i = list->head; i != NULL; i = i->next)
         list->dumpData(i->data);
 }
 
 // Zwalnia pamięć elementów listy i danych
-void freeList(List *list) {
+void freeList(List *list)
+{
     ListElement *current = list->head;
-    while (current) {
+    while (current)
+    {
         ListElement *todelete = current;
         current = current->next;
-        if (list->freeData) list->freeData(todelete->data); // zwolnienie pamięci struktury data
-        free(todelete);              // zwolnienie pamięci elementu
+        if (list->freeData)
+            list->freeData(todelete->data); // zwolnienie pamięci struktury data
+        free(todelete);                     // zwolnienie pamięci elementu
     }
     list->head = NULL;
     list->tail = NULL;
@@ -90,7 +102,8 @@ void freeList(List *list) {
 // Uniwersalne funkcje obsługi elementów listy
 
 // Dodaje element na początku listy
-void pushFront(List *list, void *data) {
+void pushFront(List *list, void *data)
+{
     ListElement *new = safe_malloc(sizeof(ListElement));
     new->data = data;
     new->next = list->head;
@@ -101,7 +114,8 @@ void pushFront(List *list, void *data) {
 }
 
 // Dodaje element na końcu listy
-void pushBack(List *list, void *data) {
+void pushBack(List *list, void *data)
+{
     ListElement *new = safe_malloc(sizeof(ListElement));
     new->data = data;
     new->next = NULL;
@@ -111,17 +125,21 @@ void pushBack(List *list, void *data) {
     if (list->head == NULL)
         list->head = list->tail;
     list->size++;
-
 }
 
 // Usuwa pierwszy element listy
-void popFront(List *list) {
-    if (list->size > 0) {
+void popFront(List *list)
+{
+    if (list->size > 0)
+    {
         ListElement *to_delete = list->head;
-        if (list->size == 1) {
+        if (list->size == 1)
+        {
             list->head = NULL;
             list->tail = NULL;
-        } else {
+        }
+        else
+        {
             list->head = to_delete->next;
         }
         list->freeData(to_delete->data);
@@ -131,13 +149,16 @@ void popFront(List *list) {
 }
 
 // Odwraca kolejność elementów listy
-void reverse(List *list) {
-    if (list->size > 1) {
+void reverse(List *list)
+{
+    if (list->size > 1)
+    {
         ListElement *prev = list->head;
         ListElement *curr = prev->next;
         prev->next = NULL;
         ListElement *temp;
-        while (curr != NULL) {
+        while (curr != NULL)
+        {
             temp = curr->next;
             curr->next = prev;
             prev = curr;
@@ -147,97 +168,102 @@ void reverse(List *list) {
         list->head = list->tail;
         list->tail = temp;
     }
-
 }
 
 // Funkcje pomocnicze dla list uporzadkowanych
 // (porządek wyznacza funkcja wskazana polem compareData)
 
 // Zwraca element w posortowanej liście, a jeżeli nie ma, to element poprzedzający (nie ma, to NULL)
-ListElement *findInsertionPoint(const List *list, ListElement *element) {
+ListElement *findInsertionPoint(const List *list, ListElement *element)
+{
     ListElement *prev = NULL;
     ListElement *curr = list->head;
-    while (curr) {
+    while (curr)
+    {
         if (list->compareData(curr->data, element->data) > 0)
             break;
         prev = curr;
         curr = curr->next;
     }
     return prev;
-
 }
-
 
 // Drugi parametr przekazuje do funkcji adres przydzielonej dla "nowych" danych pamięci.
 // Jeżeli takie dane są już w elemencie listy, to dane tego elementu są modyfikowane
 // funkcją wskazaną w polu modifyData, a pamięć "nowych" danych jest zwalniana.
 // Jeżeli w liście takiego elementu nie ma, to nowy element jest tworzony
 // i dopisany do listy zachowując uporządkowanie listy.
-void insertInOrder(List *list, void *a) {
+void insertInOrder(List *list, void *a)
+{
     ListElement *new = safe_malloc(sizeof(ListElement));
     new->next = NULL;
     new->data = a;
-    if (list->size == 0) {
+    if (list->size == 0)
+    {
         pushBack(list, a);
         return;
     }
 
     ListElement *prev = findInsertionPoint(list, new);
-    if (prev == NULL) {
+    if (prev == NULL)
+    {
         new->next = list->head;
         list->head = new;
         list->size++;
         return;
     }
-    if (list->compareData(prev->data, new->data) == 0) {
+    if (list->compareData(prev->data, new->data) == 0)
+    {
         if (list->modifyData)
             list->modifyData(prev->data);
         return;
     }
 
-    if (prev->next == NULL) {
+    if (prev->next == NULL)
+    {
         list->tail = new;
     }
     new->next = prev->next;
     prev->next = new;
     list->size++;
-
 }
-
 
 /////////////////// Funkcje do zadania 11.1.2
 
 // Dodaje element na końcu listy bez korzystania z pola tail
-void pushBack_v0(List *list, void *data) {
+void pushBack_v0(List *list, void *data)
+{
 }
 
-
 // Funkcje warstwy obsługi danych wskazywanych w polach struktury List
-
 
 //////  Dla zadania 11.1.1 i 11.1.2
 // 1. Dana jest liczbą typu int
 
 typedef int DataInt;
 
-void dump_int(const void *d) {
-    DataInt *data = (DataInt *) d;
+void dump_int(const void *d)
+{
+    DataInt *data = (DataInt *)d;
     printf("%d ", *data);
 }
 
-void free_int(void *d) {
-    DataInt *data = (DataInt *) d;
+void free_int(void *d)
+{
+    DataInt *data = (DataInt *)d;
     free(data);
 }
 
-int cmp_int(const void *a, const void *b) {
-    DataInt p1 = *((DataInt *) a);
-    DataInt p2 = *((DataInt *) b);
+int cmp_int(const void *a, const void *b)
+{
+    DataInt p1 = *((DataInt *)a);
+    DataInt p2 = *((DataInt *)b);
     return p1 - p2;
 }
 
 // Przydziela pamięć i zapisuje w niej daną o wartości v
-void *create_data_int(int v) {
+void *create_data_int(int v)
+{
     DataInt *p = safe_malloc(sizeof(DataInt));
     if (p != NULL)
         *p = v;
@@ -247,55 +273,64 @@ void *create_data_int(int v) {
 //////  Dla zadania 11.1.3 i 11.1.4
 // 2. Dana jest zapisana w  strukturze typu DataWord
 
-typedef struct DataWord {
+typedef struct DataWord
+{
     char *word;
     int counter;
 } DataWord;
 
-void dump_word(const void *d) {
-    DataWord *p = (DataWord *) d;
+void dump_word(const void *d)
+{
+    DataWord *p = (DataWord *)d;
     printf("%s ", p->word);
 }
 
-void dump_word_lowercase(const void *d) {
-    DataWord *p = (DataWord *) d;
+void dump_word_lowercase(const void *d)
+{
+    DataWord *p = (DataWord *)d;
     char *word = p->word;
     for (int i = 0; i < strlen(word); i++)
         word[i] = tolower(word[i]);
     printf("%s ", word);
 }
 
-void free_word(void *d) {
-    DataWord *p = (DataWord *) d;
+void free_word(void *d)
+{
+    DataWord *p = (DataWord *)d;
     free(p->word);
     free(p);
 }
 
-int cmp_word_alphabet(const void *a, const void *b) {
+int cmp_word_alphabet(const void *a, const void *b)
+{
 
-    char *p1 = (char *) ((DataWord *) a)->word;
-    char *p2 = (char *) ((DataWord *) b)->word;
+    char *p1 = (char *)((DataWord *)a)->word;
+    char *p2 = (char *)((DataWord *)b)->word;
     return strcasecmp(p1, p2);
 }
 
-int cmp_word_counter(const void *a, const void *b) {
-    int c1 = (((DataWord *) a)->counter);
-    int c2 = (((DataWord *) b)->counter);
+int cmp_word_counter(const void *a, const void *b)
+{
+    int c1 = (((DataWord *)a)->counter);
+    int c2 = (((DataWord *)b)->counter);
     return c1 - c2;
 }
 
-void modify_word(void *a) {
-    DataWord *p = (DataWord *) a;
+void modify_word(void *a)
+{
+    DataWord *p = (DataWord *)a;
     p->counter++;
 }
 
 // Wypisz dane elementów spełniających warunek równości sprawdzany funkcją
 // wskazywaną w polu compareData nagłówka listy
-void dumpList_word_if(List *plist, int n) {
+void dumpList_word_if(List *plist, int n)
+{
     ListElement *el;
     el = plist->head;
-    while (el != NULL) {
-        DataWord *p = (DataWord *) el->data;
+    while (el != NULL)
+    {
+        DataWord *p = (DataWord *)el->data;
         if (p->counter == n)
             dump_word_lowercase(p);
         el = el->next;
@@ -305,7 +340,8 @@ void dumpList_word_if(List *plist, int n) {
 // Przydziela pamięć dla łańcucha string i struktury typu DataWord.
 // Do przydzielonej pamięci wpisuje odpowiednie dane.
 // Zwraca adres struktury.
-void *create_data_word(char *string, int counter) {
+void *create_data_word(char *string, int counter)
+{
     DataWord *p = safe_malloc(sizeof(DataWord));
     char *word = safe_malloc(sizeof(char *));
     word = safe_strdup(string);
@@ -322,62 +358,76 @@ void *create_data_word(char *string, int counter) {
 // w kolejności określonej ostatnim parametrem funkcji (cmp)
 // - adresem funkcji porównującej typu CompareDataFp. Adres zerowy oznacza,
 // że kolejność elementów listy jest zgodna z kolejnością
-void stream_to_list(List *list, FILE *stream, CompareDataFp cmp) {
+void stream_to_list(List *list, FILE *stream, CompareDataFp cmp)
+{
     DataWord *data;
     char *p, buf[BUFFER_SIZE];
     char delimits[] = " \r\t\n.;,?!-";
-    if (cmp) list->compareData = cmp;
-    while (fgets(buf, BUFFER_SIZE, stream)) {
+    if (cmp)
+        list->compareData = cmp;
+    while (fgets(buf, BUFFER_SIZE, stream))
+    {
         p = strtok(buf, delimits);
-        while (p) {
+        while (p)
+        {
             data = create_data_word(p, 1);
-            if (cmp) insertInOrder(list, data);
-            else pushBack(list, data);
+            if (cmp)
+                insertInOrder(list, data);
+            else
+                pushBack(list, data);
             p = strtok(NULL, delimits);
         }
     }
 }
 
-void list_test(List *plist, int n) {
+void list_test(List *plist, int n)
+{
     char op[2];
     int v;
     ListElement element, *pelement;
     DataInt data;
-    for (int i = 0; i < n; ++i) {
-        if (TEST) printf("Wpisz kod polecenia ");
+    for (int i = 0; i < n; ++i)
+    {
+        if (TEST)
+            printf("Wpisz kod polecenia ");
         scanf("%s", op);
-        switch (op[0]) {
-            case 'f': // dodaj na początku listy
-                if (TEST) printf("Wpisz wartość ");
-                scanf("%d", &v);
-                pushFront(plist, create_data_int(v));
-                break;
-            case 'b': // dodaj na końcu listy
-                if (TEST) printf("Wpisz wartość ");
-                scanf("%d", &v);
-                pushBack(plist, create_data_int(v));
-                break;
-            case 'd': // usuń pierwszy element
-                popFront(plist);
-                break;
-            case 'r': // odwróć kolejność
-                reverse(plist);
-                break;
-            case 'i': // dodaj wg porządku rosnącego (int) lub alfabetycznego (char),
-                // jeżeli element już istnieje, to akcja zależna od typu danych
-                if (TEST) printf("Wpisz wartość ");
-                scanf("%d", &v);
-                insertInOrder(plist, create_data_int(v));
+        switch (op[0])
+        {
+        case 'f': // dodaj na początku listy
+            if (TEST)
+                printf("Wpisz wartość ");
+            scanf("%d", &v);
+            pushFront(plist, create_data_int(v));
+            break;
+        case 'b': // dodaj na końcu listy
+            if (TEST)
+                printf("Wpisz wartość ");
+            scanf("%d", &v);
+            pushBack(plist, create_data_int(v));
+            break;
+        case 'd': // usuń pierwszy element
+            popFront(plist);
+            break;
+        case 'r': // odwróć kolejność
+            reverse(plist);
+            break;
+        case 'i': // dodaj wg porządku rosnącego (int) lub alfabetycznego (char),
+            // jeżeli element już istnieje, to akcja zależna od typu danych
+            if (TEST)
+                printf("Wpisz wartość ");
+            scanf("%d", &v);
+            insertInOrder(plist, create_data_int(v));
 
-                break;
-            default:
-                printf("No such operation: %s\n", op);
-                break;
+            break;
+        default:
+            printf("No such operation: %s\n", op);
+            break;
         }
     }
 }
 
-int main(void) {
+int main(void)
+{
     setbuf(stdout, 0);
 
     int to_do, n, size;
@@ -388,87 +438,102 @@ int main(void) {
     List list;
     ListElement *head;
 
-    if (TEST) printf("Wpisz nr zadania ");
+    if (TEST)
+        printf("Wpisz nr zadania ");
     scanf("%d", &to_do);
-    switch (to_do) {
-        case 1:
-            if (TEST) printf("Wpisz liczbę poleceń ");
-            scanf("%d", &n);
-            head = NULL;
-            init_List(&list, dump_int, free_int, cmp_int, NULL);
-//        list_test(&list, n, int (cmp)(const void*, const void*))
-            list_test(&list, n);
-            dumpList(&list);
-            freeList(&list);
-            break;
-        case 2:
-            if (TEST) printf("Wpisz liczbę elementów ");
-            scanf("%d", &size);
-            init_List(&list, dump_int, free_int, cmp_int, NULL);
-            t_start = clock();
-            for (int i = 0; i < size; ++i) pushBack_v0(&list, create_data_int(i));
-            t_end = clock();
-            t_total = (double) (t_end - t_start) / CLOCKS_PER_SEC;
-            printf("n = %d. Back bez tail.  Czas = %g s.\n", size, t_total);
-            freeList(&list);
+    switch (to_do)
+    {
+    case 1:
+        if (TEST)
+            printf("Wpisz liczbę poleceń ");
+        scanf("%d", &n);
+        head = NULL;
+        init_List(&list, dump_int, free_int, cmp_int, NULL);
+        //        list_test(&list, n, int (cmp)(const void*, const void*))
+        list_test(&list, n);
+        dumpList(&list);
+        freeList(&list);
+        break;
+    case 2:
+        if (TEST)
+            printf("Wpisz liczbę elementów ");
+        scanf("%d", &size);
+        init_List(&list, dump_int, free_int, cmp_int, NULL);
+        t_start = clock();
+        for (int i = 0; i < size; ++i)
+            pushBack_v0(&list, create_data_int(i));
+        t_end = clock();
+        t_total = (double)(t_end - t_start) / CLOCKS_PER_SEC;
+        printf("n = %d. Back bez tail.  Czas = %g s.\n", size, t_total);
+        freeList(&list);
 
-            init_List(&list, dump_int, free_int, cmp_int, NULL);
-            t_start = clock();
-            for (int i = 0; i < size; ++i) pushFront(&list, create_data_int(i));
-            reverse(&list);
-            t_end = clock();
-            t_total = (double) (t_end - t_start) / CLOCKS_PER_SEC;
-            printf("n = %d. Front + revers. Czas = %g s.\n", size, t_total);
-            freeList(&list);
+        init_List(&list, dump_int, free_int, cmp_int, NULL);
+        t_start = clock();
+        for (int i = 0; i < size; ++i)
+            pushFront(&list, create_data_int(i));
+        reverse(&list);
+        t_end = clock();
+        t_total = (double)(t_end - t_start) / CLOCKS_PER_SEC;
+        printf("n = %d. Front + revers. Czas = %g s.\n", size, t_total);
+        freeList(&list);
 
-            init_List(&list, dump_int, free_int, cmp_int, NULL);
-            t_start = clock();
-            for (int i = 0; i < size; ++i) pushBack(&list, create_data_int(i));
-            t_end = clock();
-            t_total = (double) (t_end - t_start) / CLOCKS_PER_SEC;
-            printf("n = %d. Back z tail.    Czas = %g s.\n", size, t_total);
-            freeList(&list);
-            break;
-        case 3:      // wypisz wszystkie słowa wczytane do elementów listy
-            init_List(&list, dump_word, free_word, NULL, NULL);
-            if (TEST) {
-                stream = stdin;
-                printf("Wpisz linie tekstu\n");
-                stream_to_list(&list, stream, NULL);
-                rewind(stream);
-            } else {
-                stream = fopen("Tekst_1.txt", "r");
-                if (stream == NULL) exit(FILE_OPEN_ERROR);
-                stream_to_list(&list, stream, NULL);
-                fclose(stream);
-            }
-            dumpList(&list);
-            freeList(&list);
-            break;
-        case 4:      // wypisz w porządku alfabetycznym słowa o zadanej krotności
-            if (TEST) printf("Wpisz krotność słowa ");
-            scanf("%d", &n);
-            init_List(&list, dump_word, free_word, NULL, modify_word);
-            if (TEST) {
-                stream = stdin;
-                printf("Wpisz linie tekstu\n");
-                stream_to_list(&list, stream, cmp_word_alphabet);
-                rewind(stream);
-            } else {
-                stream = fopen("Tekst_C.txt", "r");
-                if (stream == NULL) exit(FILE_OPEN_ERROR);
-                stream_to_list(&list, stream, cmp_word_alphabet);
-                fclose(stream);
-            }
+        init_List(&list, dump_int, free_int, cmp_int, NULL);
+        t_start = clock();
+        for (int i = 0; i < size; ++i)
+            pushBack(&list, create_data_int(i));
+        t_end = clock();
+        t_total = (double)(t_end - t_start) / CLOCKS_PER_SEC;
+        printf("n = %d. Back z tail.    Czas = %g s.\n", size, t_total);
+        freeList(&list);
+        break;
+    case 3: // wypisz wszystkie słowa wczytane do elementów listy
+        init_List(&list, dump_word, free_word, NULL, NULL);
+        if (TEST)
+        {
+            stream = stdin;
+            printf("Wpisz linie tekstu\n");
+            stream_to_list(&list, stream, NULL);
+            rewind(stream);
+        }
+        else
+        {
+            stream = fopen("Tekst_1.txt", "r");
+            if (stream == NULL)
+                exit(FILE_OPEN_ERROR);
+            stream_to_list(&list, stream, NULL);
+            fclose(stream);
+        }
+        dumpList(&list);
+        freeList(&list);
+        break;
+    case 4: // wypisz w porządku alfabetycznym słowa o zadanej krotności
+        if (TEST)
+            printf("Wpisz krotność słowa ");
+        scanf("%d", &n);
+        init_List(&list, dump_word, free_word, NULL, modify_word);
+        if (TEST)
+        {
+            stream = stdin;
+            printf("Wpisz linie tekstu\n");
+            stream_to_list(&list, stream, cmp_word_alphabet);
+            rewind(stream);
+        }
+        else
+        {
+            stream = fopen("Tekst_C.txt", "r");
+            if (stream == NULL)
+                exit(FILE_OPEN_ERROR);
+            stream_to_list(&list, stream, cmp_word_alphabet);
+            fclose(stream);
+        }
 
-            list.compareData = cmp_word_counter;
-            dumpList_word_if(&list, n);
-            printf("\n");
-            freeList(&list);
-            break;
-        default:
-            printf("NOTHING TO DO FOR %d\n", to_do);
+        list.compareData = cmp_word_counter;
+        dumpList_word_if(&list, n);
+        printf("\n");
+        freeList(&list);
+        break;
+    default:
+        printf("NOTHING TO DO FOR %d\n", to_do);
     }
     return 0;
 }
-

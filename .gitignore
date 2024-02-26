@@ -1,6 +1,6 @@
 *.exe
+build/
 cmake-build-debug/
 CMakeLists.txt
 archive/
-wojnaJanek.c
 sol.c

@@ -95,7 +95,7 @@ void char_count(int char_no, int *n_char, int *cnt, FILE *stream)
             count[c - FIRST_CHAR] += 1;
     qsort(poz_chars, MAX_CHARS, sizeof(int), cmp);
     *cnt = count[poz_chars[char_no - 1]];
-    *n_char = poz_chars[char_no - 1]+FIRST_CHAR;
+    *n_char = poz_chars[char_no - 1] + FIRST_CHAR;
 }
 
 // count how many times each digram (a pair of characters, from [FIRST_CHAR,
